@@ -10,7 +10,6 @@ PathView {
         rightMargin: 0
     }
 
-    model: api.collections
     focus: true
 
     signal collectionChanged(string shortName, string name)
@@ -69,6 +68,11 @@ PathView {
         z: PathView.z !== undefined ? PathView.z : 0
 
         property bool isCurrent: PathView.isCurrentItem
+        property string itemShortName: {
+            if (model.shortName !== undefined) return model.shortName
+                if (modelData && modelData.shortName !== undefined) return modelData.shortName
+                    return ""
+        }
 
         Rectangle {
             id: background
@@ -80,7 +84,7 @@ PathView {
                 anchors.fill: parent
                 anchors.margins: parent.height * 0.0179
                 fillMode: Image.PreserveAspectFit
-                source: modelData ? "assets/images/collections/" + modelData.shortName + ".png" : ""
+                source: itemShortName !== "" ? "assets/images/collections/" + itemShortName + ".png" : ""
                 mipmap: true
                 sourceSize.width: parent.width
                 sourceSize.height: parent.height
@@ -114,7 +118,7 @@ PathView {
 
     onCurrentIndexChanged: {
         if (model && model.count > 0 && currentIndex >= 0) {
-            const selectedCollection = api.collections.get(currentIndex)
+            const selectedCollection = model.get(currentIndex)
             if (selectedCollection) {
                 if (_initialized) {
                     soundEffects.playNavigation()
@@ -127,7 +131,7 @@ PathView {
     Component.onCompleted: {
         if (model && model.count > 0) {
             currentIndex = 0
-            const firstCollection = api.collections.get(0)
+            const firstCollection = model.get(0)
             if (firstCollection) {
                 collectionChanged(firstCollection.shortName, firstCollection.name)
             }

@@ -12,6 +12,10 @@ FocusScope {
     property bool crtEffectEnabled: true
     property bool interfaceReady: false
 
+    CollectionsModel {
+        id: collectionsModel
+    }
+
     CollectionSummary {
         id: collectionSummary
     }
@@ -84,6 +88,7 @@ FocusScope {
             height: parent.height * 0.9
             visible: !gamesPathView.visible
             opacity: interfaceReady ? 1 : 0
+            model: collectionsModel.modelReady ? collectionsModel.getModel() : null
 
             Behavior on opacity {
                 NumberAnimation { duration: 1000 }
@@ -92,7 +97,11 @@ FocusScope {
             onCollectionChanged: {
                 currentCollectionShortName = shortName
                 currentCollectionName = name
-                currentCollection = api.collections.get(collectionPathView.currentIndex)
+
+                // Obtener la colección del modelo extendido
+                var collectionData = collectionsModel.getModel().get(collectionPathView.currentIndex)
+                currentCollection = collectionData
+
                 updateCollectionDescription()
                 updateGamesCount()
                 collectionTitleText.text = name
@@ -360,18 +369,31 @@ FocusScope {
     property var currentGame: null
 
     Component.onCompleted: {
-        if (api.collections.count > 0) {
+        if (collectionsModel.modelReady) {
             initializeFirstCollection()
         } else {
-            interfaceReady = true
+            modelReadyConnection.enabled = true
         }
         //soundEffects.playBackgroundMusic()
     }
 
+    Connections {
+        id: modelReadyConnection
+        target: collectionsModel
+        enabled: false
+        function onModelReadyChanged() {
+            if (collectionsModel.modelReady) {
+                initializeFirstCollection()
+                modelReadyConnection.enabled = false
+            }
+        }
+    }
+
     function initializeFirstCollection() {
-        if (api.collections.count > 0) {
+        var model = collectionsModel.getModel()
+        if (model && model.count > 0) {
             collectionPathView.currentIndex = 0
-            const firstCollection = api.collections.get(0)
+            const firstCollection = model.get(0)
             if (firstCollection) {
                 currentCollectionShortName = firstCollection.shortName
                 currentCollectionName = firstCollection.name
@@ -381,6 +403,8 @@ FocusScope {
                 collectionTitleText.text = currentCollectionName
                 startupTimer.start()
             }
+        } else {
+            interfaceReady = true
         }
     }
 
@@ -397,7 +421,6 @@ FocusScope {
         if (!currentCollectionShortName) {
             return "Select a collection to view its description"
         }
-
         var systemMetadata = collectionSummary.getSystemMetadata(currentCollectionShortName)
         if (systemMetadata && systemMetadata.description) {
             return systemMetadata.description

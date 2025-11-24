@@ -976,6 +976,18 @@ QtObject {
             description: "The Game Boy Advance (abbreviated as GBA) is a 32-bit handheld video game console developed, manufactured and marketed by Nintendo as the successor to the Game Boy Color. It was released in Japan on March 21, 2001, in North America on June 11, 2001, in Australia and Europe on June 22, 2001, and in mainland China on June 8, 2004 (iQue Player)."
         },
         {
+            shortName: "favorite",
+            systemName: "Favorite",
+            releaseYear: "Varios",
+            description: "Your handpicked collection of favorite games across all platforms. Mark games as favorites to quickly access your most loved titles anytime."
+        },
+        {
+            shortName: "history",
+            systemName: "History",
+            releaseYear: "Varios",
+            description: "Your gaming journey. Browse through your recently played games, showing the last 50 titles you've launched, sorted by most recent activity."
+        },
+        {
             shortName: "advision",
             systemName: "Advision",
             releaseYear: 1982,
