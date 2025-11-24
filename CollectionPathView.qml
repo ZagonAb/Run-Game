@@ -8,14 +8,13 @@ PathView {
     anchors {
         right: parent.right
         rightMargin: 0
-        top: parent.top
-        bottom: parent.bottom
     }
 
     model: api.collections
     focus: true
 
     signal collectionChanged(string shortName, string name)
+    property bool _initialized: false
 
     pathItemCount: 9
     preferredHighlightBegin: 0.5
@@ -24,11 +23,17 @@ PathView {
     path: Path {
         startX: collectionPathView.width - 30; startY: 0
 
+        PathAttribute { name: "scale"; value: 1.0 }
+        PathAttribute { name: "z"; value: 0 }
+
         PathQuad {
             x: collectionPathView.width - 30; y: collectionPathView.height
             controlX: -collectionPathView.width * 0.8;
             controlY: collectionPathView.height * 0.5
         }
+
+        PathAttribute { name: "scale"; value: 1.0 }
+        PathAttribute { name: "z"; value: 100 }
     }
 
     delegate: Item {
@@ -36,27 +41,32 @@ PathView {
         width: collectionPathView.width * 0.5714
         height: collectionPathView.height * 0.3889
 
-        scale: PathView.scale
+        scale: (PathView.scale !== undefined ? PathView.scale : 1.0)
+
         opacity: {
             var centerIndex = collectionPathView.currentIndex
             var itemIndex = index
-            var totalItems = collectionPathView.model.count
-            var maxDistance = Math.floor(collectionPathView.pathItemCount / 2)
+            var totalItems = collectionPathView.model ? collectionPathView.model.count : 0
 
-            // Calcular distancia circular considerando el wrap-around
-            var distance1 = Math.abs(itemIndex - centerIndex)
-            var distance2 = totalItems - distance1
-            var distance = Math.min(distance1, distance2)
+            if (totalItems === 0) return 0.1
 
-            // Si la distancia es mayor que maxDistance, usar opacidad mínima
-            if (distance > maxDistance) {
-                return 0.1
-            }
+                var maxDistance = Math.floor(collectionPathView.pathItemCount / 2)
+                var distance1 = Math.abs(itemIndex - centerIndex)
+                var distance2 = totalItems - distance1
+                var distance = Math.min(distance1, distance2)
 
-            // Calcular opacidad gradual
-            return Math.max(0.1, 1.0 - (distance / maxDistance) * 0.9)
+                if (distance === 0) {
+                    return 1.0
+                }
+
+                if (distance > maxDistance) {
+                    return 0.1
+                }
+
+                return Math.max(0.1, 0.6 - ((distance - 1) / maxDistance) * 0.5)
         }
-        z: PathView.z
+
+        z: PathView.z !== undefined ? PathView.z : 0
 
         property bool isCurrent: PathView.isCurrentItem
 
@@ -75,7 +85,7 @@ PathView {
                 sourceSize.width: parent.width
                 sourceSize.height: parent.height
 
-                scale: isCurrent ? 1.8 : 1.0
+                scale: isCurrent && collectionIcon.source !== "" ? 1.8 : 1.0
 
                 Behavior on scale {
                     NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
@@ -106,6 +116,9 @@ PathView {
         if (model && model.count > 0 && currentIndex >= 0) {
             const selectedCollection = api.collections.get(currentIndex)
             if (selectedCollection) {
+                if (_initialized) {
+                    soundEffects.playNavigation()
+                }
                 collectionChanged(selectedCollection.shortName, selectedCollection.name)
             }
         }
@@ -118,14 +131,17 @@ PathView {
             if (firstCollection) {
                 collectionChanged(firstCollection.shortName, firstCollection.name)
             }
+            _initialized = true
         }
     }
 
     Keys.onPressed: {
         if (api.keys.isNextPage(event) || api.keys.isDown(event)) {
+            soundEffects.playNavigation()
             incrementCurrentIndex()
             event.accepted = true
         } else if (api.keys.isPrevPage(event) || api.keys.isUp(event)) {
+            soundEffects.playNavigation()
             decrementCurrentIndex()
             event.accepted = true
         }

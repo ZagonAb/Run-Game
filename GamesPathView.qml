@@ -8,14 +8,14 @@ PathView {
     anchors {
         right: parent.right
         rightMargin: 0
-        top: parent.top
-        bottom: parent.bottom
     }
 
     focus: true
 
     signal gameChanged(var gameData)
     signal gameSelected(var gameData)
+
+    property bool _initialized: false
 
     pathItemCount: 9
     preferredHighlightBegin: 0.5
@@ -24,11 +24,17 @@ PathView {
     path: Path {
         startX: gamesPathView.width - 30; startY: 0
 
+        PathAttribute { name: "scale"; value: 1.0 }
+        PathAttribute { name: "z"; value: 0 }
+
         PathQuad {
             x: gamesPathView.width - 30; y: gamesPathView.height
             controlX: -gamesPathView.width * 0.8;
             controlY: gamesPathView.height * 0.5
         }
+
+        PathAttribute { name: "scale"; value: 1.0 }
+        PathAttribute { name: "z"; value: 100 }
     }
 
     delegate: Item {
@@ -36,30 +42,38 @@ PathView {
         width: gamesPathView.width * 0.5714
         height: gamesPathView.height * 0.3889
 
-        scale: PathView.scale
+        scale: (PathView.scale !== undefined ? PathView.scale : 1.0)
+
         opacity: {
             var centerIndex = gamesPathView.currentIndex
             var itemIndex = index
-            var totalItems = gamesPathView.model.count
-            var maxDistance = Math.floor(gamesPathView.pathItemCount / 2)
-            var distance1 = Math.abs(itemIndex - centerIndex)
-            var distance2 = totalItems - distance1
-            var distance = Math.min(distance1, distance2)
+            var totalItems = gamesPathView.model ? gamesPathView.model.count : 0
 
-            if (distance > maxDistance) {
-                return 0.1
-            }
+            if (totalItems === 0) return 0.1
 
-            return Math.max(0.1, 1.0 - (distance / maxDistance) * 0.9)
+                var maxDistance = Math.floor(gamesPathView.pathItemCount / 2)
+                var distance1 = Math.abs(itemIndex - centerIndex)
+                var distance2 = totalItems - distance1
+                var distance = Math.min(distance1, distance2)
+
+                if (distance === 0) {
+                    return 1.0
+                }
+
+                if (distance > maxDistance) {
+                    return 0.1
+                }
+
+                return Math.max(0.1, 0.6 - ((distance - 1) / maxDistance) * 0.5)
         }
-        z: PathView.z
+
+        z: PathView.isCurrentItem ? 1000 : (PathView.z !== undefined ? PathView.z : 0)
 
         property bool isCurrent: PathView.isCurrentItem
 
-        Rectangle {
+        Item {
             id: gameBackground
             anchors.fill: parent
-            color: "transparent"
 
             Image {
                 id: gameLogo
@@ -71,21 +85,35 @@ PathView {
                 sourceSize.width: parent.width
                 sourceSize.height: parent.height
 
-                scale: isCurrent ? 1.8 : 1.0
-                z: isCurrent ? 100 : 90
+                scale: isCurrent && gameLogo.source !== "" ? 1.8 : 1.0
 
                 Behavior on scale {
                     NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
                 }
 
                 layer.enabled: true
-                layer.effect: DropShadow {
+                layer.effect: isCurrent ? glowEffect : simpleDropShadow
+            }
+
+            Component {
+                id: glowEffect
+                Glow {
+                    samples: 15
+                    color: "white"
+                    spread: 0.2
+                    radius: 2
+                }
+            }
+
+            Component {
+                id: simpleDropShadow
+                DropShadow {
                     transparentBorder: true
-                    horizontalOffset: isCurrent ? 10 : 5
-                    verticalOffset: isCurrent ? 10 : 5
-                    radius: isCurrent ? 20 : 5
-                    samples: 35
-                    color: isCurrent ? "#E6000000" : "#99000000"
+                    horizontalOffset: 5
+                    verticalOffset: 5
+                    radius: 5
+                    samples: 17
+                    color: "black"
                 }
             }
         }
@@ -101,6 +129,7 @@ PathView {
         MouseArea {
             anchors.fill: parent
             onClicked: {
+                soundEffects.playNavigation()
                 gamesPathView.currentIndex = index
                 gamesPathView.gameChanged(modelData)
             }
@@ -114,6 +143,9 @@ PathView {
         if (model && model.count > 0 && currentIndex >= 0) {
             const selectedGame = model.get(currentIndex)
             if (selectedGame) {
+                if (_initialized) {
+                    soundEffects.playNavigation()
+                }
                 gameChanged(selectedGame)
             }
         }
@@ -126,20 +158,24 @@ PathView {
             if (selectedGame) {
                 gameChanged(selectedGame)
             }
+            _initialized = true
         }
     }
 
     Keys.onPressed: {
         if (api.keys.isNextPage(event) || api.keys.isDown(event)) {
+            soundEffects.playNavigation()
             incrementCurrentIndex()
             event.accepted = true
         } else if (api.keys.isPrevPage(event) || api.keys.isUp(event)) {
+            soundEffects.playNavigation()
             decrementCurrentIndex()
             event.accepted = true
         } else if (api.keys.isAccept(event)) {
             if (model && model.count > 0 && currentIndex >= 0) {
                 const selectedGame = model.get(currentIndex)
                 if (selectedGame) {
+                    soundEffects.playSelect()
                     gameSelected(selectedGame)
                     event.accepted = true
                 }

@@ -3,7 +3,6 @@ import QtQuick.Window 2.15
 import QtGraphicalEffects 1.12
 import SortFilterProxyModel 0.2
 
-
 FocusScope {
     id: root
     width: parent.width
@@ -17,10 +16,19 @@ FocusScope {
         id: collectionSummary
     }
 
+    SoundEffects {
+        id: soundEffects
+    }
+
     Rectangle {
         id: background
         anchors.fill: parent
         color: "#1a1a1a"
+    }
+
+    Item {
+        id: mainInterface
+        anchors.fill: parent
 
         Image {
             id: bgImage
@@ -28,7 +36,7 @@ FocusScope {
             fillMode: Image.PreserveAspectCrop
             source: currentCollection ? "assets/images/collections/" + currentCollectionShortName + "-content.jpg" : ""
             opacity: interfaceReady ? 0.8 : 0
-            visible: !gamesPathView.visible && !crtEffectEnabled
+            visible: !gamesPathView.visible
 
             layer.enabled: crtEffectEnabled
             layer.mipmap: true
@@ -53,19 +61,11 @@ FocusScope {
                 return "assets/images/collections/default.png"
             }
             opacity: 0.8
-            visible: gamesPathView.visible && !crtEffectEnabled
+            visible: gamesPathView.visible
 
             layer.enabled: crtEffectEnabled
             layer.mipmap: true
             layer.smooth: true
-        }
-
-        CRTEffect {
-            id: crtEffect
-            anchors.fill: parent
-            source: gamesPathView.visible ? gameBgImage : bgImage
-            crtEffectEnabled: root.crtEffectEnabled
-            zoomFactor: 1.08
         }
 
         Rectangle {
@@ -73,272 +73,285 @@ FocusScope {
             color: "#1a1a1a"
             opacity: 0.4
         }
-    }
 
-    CollectionPathView {
-        id: collectionPathView
-        anchors {
-            right: parent.right
-            rightMargin: root.width * 0.03125
-            verticalCenter: parent.verticalCenter
-        }
-        height: parent.height * 0.9
-        visible: !gamesPathView.visible
-        opacity: interfaceReady ? 1 : 0
-
-        Behavior on opacity {
-            NumberAnimation { duration: 1000 }
-        }
-
-        onCollectionChanged: {
-            currentCollectionShortName = shortName
-            currentCollectionName = name
-            currentCollection = api.collections.get(collectionPathView.currentIndex)
-            updateCollectionDescription()
-            updateGamesCount()
-            collectionTitleText.text = name
-
-            if (!interfaceReady) {
-                interfaceReady = true
+        CollectionPathView {
+            id: collectionPathView
+            anchors {
+                right: parent.right
+                rightMargin: root.width * 0.03125
+                verticalCenter: parent.verticalCenter
             }
-        }
-    }
+            height: parent.height * 0.9
+            visible: !gamesPathView.visible
+            opacity: interfaceReady ? 1 : 0
 
-    GamesPathView {
-        id: gamesPathView
-        anchors {
-            right: parent.right
-            rightMargin: root.width * 0.03125
-            verticalCenter: parent.verticalCenter
-        }
-        height: parent.height * 0.9
-        visible: false
-        opacity: 0
-
-        Behavior on opacity {
-            NumberAnimation { duration: 400 }
-        }
-
-        onGameChanged: {
-            currentGame = gameData
-            if (gameData) {
-                collectionTitleText.text = gameData.title
+            Behavior on opacity {
+                NumberAnimation { duration: 1000 }
             }
-        }
 
-        onGameSelected: {
-            if (gameData) {
-                gameData.launch()
-            }
-        }
+            onCollectionChanged: {
+                currentCollectionShortName = shortName
+                currentCollectionName = name
+                currentCollection = api.collections.get(collectionPathView.currentIndex)
+                updateCollectionDescription()
+                updateGamesCount()
+                collectionTitleText.text = name
 
-        Keys.onPressed: {
-            if (api.keys.isCancel(event)) {
-                hideGamesPathView()
-                event.accepted = true
-            }
-        }
-    }
-
-    Column {
-        id: collectionInfo
-        width: root.width * 0.55
-        anchors.left: parent.left
-        anchors.leftMargin: root.width * 0.03906
-        anchors.verticalCenter: parent.verticalCenter
-        spacing: root.height * 0.0278
-        opacity: interfaceReady ? 1 : 0
-
-        Behavior on opacity {
-            NumberAnimation { duration: 400 }
-        }
-
-        Text {
-            id: collectionTitleText
-            text: {
-                if (gamesPathView.visible) {
-                    return currentGame ? currentGame.title : "Selecciona un juego"
-                } else {
-                    return currentCollectionName || "Cargando..."
+                if (!interfaceReady) {
+                    interfaceReady = true
                 }
             }
-            font.family: global.fonts.sans
-            font.pixelSize: root.height * 0.05
-            font.bold: true
-            color: "white"
-            width: parent.width
-            wrapMode: Text.Wrap
-
-            layer.enabled: true
-            layer.effect: DropShadow {
-                transparentBorder: true
-                horizontalOffset: 4
-                verticalOffset: 4
-                radius: 8
-                samples: 20
-                color: "#CC000000"
-            }
         }
 
-        Text {
-            id: collectionDescription
-            text: getCollectionDescription()
-            font.family: global.fonts.sans
-            font.pixelSize: root.height * 0.035
-            color: "#eaeaea"
-            width: parent.width
-            wrapMode: Text.Wrap
-            lineHeight: 1.05
-            visible: text !== "" && !gamesPathView.visible
+        GamesPathView {
+            id: gamesPathView
+            anchors {
+                right: parent.right
+                rightMargin: root.width * 0.03125
+                verticalCenter: parent.verticalCenter
+            }
+            height: parent.height * 0.9
+            visible: false
+            opacity: 0
 
-            layer.enabled: true
-            layer.effect: DropShadow {
-                transparentBorder: true
-                horizontalOffset: 2
-                verticalOffset: 2
-                radius: 10
-                samples: 20
-                color: "#CC000000"
+            Behavior on opacity {
+                NumberAnimation { duration: 400 }
+            }
+
+            onGameChanged: {
+                currentGame = gameData
+                if (gameData) {
+                    collectionTitleText.text = gameData.title
+                }
+            }
+
+            onGameSelected: {
+                if (gameData) {
+                    gameData.launch()
+                }
+            }
+
+            Keys.onPressed: {
+                if (api.keys.isCancel(event)) {
+                    soundEffects.playBack()
+                    hideGamesPathView()
+                    event.accepted = true
+                }
             }
         }
 
         Column {
-            id: gameMediaColumn
-            width: parent.width * 0.6
-            height: root.height * 0.65
-            spacing: root.height * 0.02
-            visible: gamesPathView.visible
+            id: collectionInfo
+            width: root.width * 0.55
+            anchors.left: parent.left
+            anchors.leftMargin: root.width * 0.03906
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: root.height * 0.0278
+            opacity: interfaceReady ? 1 : 0
 
-            Image {
-                id: gameBoxArt
-                width: parent.width
-                height: Math.min(parent.height * 0.6, width * 1.4)
-                fillMode: Image.PreserveAspectFit
-                source: {
-                    if (currentGame) {
-                        if (currentGame.assets.boxFront && currentGame.assets.boxFront !== "") return currentGame.assets.boxFront
-                            if (currentGame.assets.screenshot && currentGame.assets.screenshot !== "") return currentGame.assets.screenshot
-                                return "assets/images/collections/default.png"
+            Behavior on opacity {
+                NumberAnimation { duration: 400 }
+            }
+
+            Text {
+                id: collectionTitleText
+                text: {
+                    if (gamesPathView.visible) {
+                        return currentGame ? currentGame.title : "Select a game"
+                    } else {
+                        return currentCollectionName || "Loading..."
                     }
-                    return "assets/images/collections/default.png"
                 }
+                font.family: global.fonts.sans
+                font.pixelSize: root.height * 0.05
+                font.bold: true
+                color: "white"
+                width: parent.width
+                wrapMode: Text.Wrap
 
                 layer.enabled: true
                 layer.effect: DropShadow {
                     transparentBorder: true
                     horizontalOffset: 4
                     verticalOffset: 4
-                    radius: 12
+                    radius: 8
                     samples: 20
                     color: "#CC000000"
                 }
             }
 
-            Image {
-                id: gameTitleScreen
+            Text {
+                id: collectionDescription
+                text: getCollectionDescription()
+                font.family: global.fonts.sans
+                font.pixelSize: root.height * 0.035
+                color: "#eaeaea"
                 width: parent.width
-                height: Math.min(parent.height * 0.4, width * 0.75)
-                fillMode: Image.PreserveAspectFit
-                source: {
-                    if (currentGame) {
-                        if (currentGame.assets.titlescreen && currentGame.assets.titlescreen !== "") return currentGame.assets.titlescreen
-                            if (currentGame.assets.screenshot && currentGame.assets.screenshot !== "") return currentGame.assets.screenshot
-                                return "assets/images/collections/default.png"
-                    }
-                    return "assets/images/collections/default.png"
-                }
+                wrapMode: Text.Wrap
+                lineHeight: 1.05
+                visible: text !== "" && !gamesPathView.visible
 
                 layer.enabled: true
                 layer.effect: DropShadow {
                     transparentBorder: true
-                    horizontalOffset: 4
-                    verticalOffset: 4
-                    radius: 12
+                    horizontalOffset: 2
+                    verticalOffset: 2
+                    radius: 10
                     samples: 20
                     color: "#CC000000"
+                }
+            }
+
+            Column {
+                id: gameMediaColumn
+                width: parent.width * 0.6
+                height: root.height * 0.65
+                spacing: root.height * 0.02
+                visible: gamesPathView.visible
+
+                Image {
+                    id: gameBoxArt
+                    width: parent.width
+                    height: Math.min(parent.height * 0.6, width * 1.4)
+                    fillMode: Image.PreserveAspectFit
+                    source: {
+                        if (currentGame) {
+                            if (currentGame.assets.boxFront && currentGame.assets.boxFront !== "") return currentGame.assets.boxFront
+                                if (currentGame.assets.screenshot && currentGame.assets.screenshot !== "") return currentGame.assets.screenshot
+                                    return "assets/images/collections/default.png"
+                        }
+                        return "assets/images/collections/default.png"
+                    }
+
+                    layer.enabled: true
+                    layer.effect: DropShadow {
+                        transparentBorder: true
+                        horizontalOffset: 4
+                        verticalOffset: 4
+                        radius: 12
+                        samples: 20
+                        color: "#CC000000"
+                    }
+                }
+
+                Image {
+                    id: gameTitleScreen
+                    width: parent.width
+                    height: Math.min(parent.height * 0.4, width * 0.75)
+                    fillMode: Image.PreserveAspectFit
+                    source: {
+                        if (currentGame) {
+                            if (currentGame.assets.titlescreen && currentGame.assets.titlescreen !== "") return currentGame.assets.titlescreen
+                                if (currentGame.assets.screenshot && currentGame.assets.screenshot !== "") return currentGame.assets.screenshot
+                                    return "assets/images/collections/default.png"
+                        }
+                        return "assets/images/collections/default.png"
+                    }
+
+                    layer.enabled: true
+                    layer.effect: DropShadow {
+                        transparentBorder: true
+                        horizontalOffset: 4
+                        verticalOffset: 4
+                        radius: 12
+                        samples: 20
+                        color: "#CC000000"
+                    }
+                }
+            }
+
+            Row {
+                width: parent.width
+                spacing: root.width * 0.01
+
+                Text {
+                    text: "Press ENTER to view the games"
+                    font.family: global.fonts.condensed
+                    font.pixelSize: root.height * 0.028
+                    color: "white"
+                    opacity: 0.8
+                    visible: !gamesPathView.visible && interfaceReady
+
+                    layer.enabled: true
+                    layer.effect: DropShadow {
+                        transparentBorder: true
+                        horizontalOffset: 2
+                        verticalOffset: 2
+                        radius: 4
+                        samples: 9
+                        color: "#80000000"
+                    }
+                }
+
+                Text {
+                    text: "Press ENTER to play • ESC to return"
+                    font.family: global.fonts.condensed
+                    font.pixelSize: root.height * 0.028
+                    color: "white"
+                    opacity: 0.8
+                    visible: gamesPathView.visible
+
+                    layer.enabled: true
+                    layer.effect: DropShadow {
+                        transparentBorder: true
+                        horizontalOffset: 2
+                        verticalOffset: 2
+                        radius: 4
+                        samples: 9
+                        color: "#80000000"
+                    }
+                }
+
+                Text {
+                    id: gamesCountText
+                    text: getGamesCountText()
+                    font.family: global.fonts.condensed
+                    font.pixelSize: root.height * 0.028
+                    color: "#ffffff"
+                    opacity: 0.8
+                    visible: !gamesPathView.visible && currentCollection && interfaceReady
+
+                    layer.enabled: true
+                    layer.effect: DropShadow {
+                        transparentBorder: true
+                        horizontalOffset: 2
+                        verticalOffset: 2
+                        radius: 4
+                        samples: 9
+                        color: "#80000000"
+                    }
                 }
             }
         }
 
-        Row {
-            width: parent.width
-            spacing: root.width * 0.01
+        Rectangle {
+            id: loadingIndicator
+            anchors.centerIn: parent
+            width: 200
+            height: 100
+            color: "transparent"
+            visible: !interfaceReady
 
             Text {
-                text: "Presiona ENTER para ver los juegos"
-                font.family: global.fonts.condensed
-                font.pixelSize: root.height * 0.028
+                anchors.centerIn: parent
+                text: "Loading..."
+                font.family: global.fonts.sans
+                font.pixelSize: 30
                 color: "white"
-                opacity: 0.8
-                visible: !gamesPathView.visible && interfaceReady
-
-                layer.enabled: true
-                layer.effect: DropShadow {
-                    transparentBorder: true
-                    horizontalOffset: 2
-                    verticalOffset: 2
-                    radius: 4
-                    samples: 9
-                    color: "#80000000"
-                }
-            }
-
-            Text {
-                text: "Presiona ENTER para jugar • ESC para volver"
-                font.family: global.fonts.condensed
-                font.pixelSize: root.height * 0.028
-                color: "white"
-                opacity: 0.8
-                visible: gamesPathView.visible
-
-                layer.enabled: true
-                layer.effect: DropShadow {
-                    transparentBorder: true
-                    horizontalOffset: 2
-                    verticalOffset: 2
-                    radius: 4
-                    samples: 9
-                    color: "#80000000"
-                }
-            }
-
-            Text {
-                id: gamesCountText
-                text: getGamesCountText()
-                font.family: global.fonts.condensed
-                font.pixelSize: root.height * 0.028
-                color: "#ffffff"
-                opacity: 0.8
-                visible: !gamesPathView.visible && currentCollection && interfaceReady
-
-                layer.enabled: true
-                layer.effect: DropShadow {
-                    transparentBorder: true
-                    horizontalOffset: 2
-                    verticalOffset: 2
-                    radius: 4
-                    samples: 9
-                    color: "#80000000"
-                }
             }
         }
     }
 
-    Rectangle {
-        id: loadingIndicator
-        anchors.centerIn: parent
-        width: 200
-        height: 100
-        color: "transparent"
-        visible: !interfaceReady
-
-        Text {
-            anchors.centerIn: parent
-            text: "Cargando..."
-            font.family: global.fonts.sans
-            font.pixelSize: 30
-            color: "white"
+    CRTEffect {
+        id: crtEffect
+        anchors.fill: parent
+        source: ShaderEffectSource {
+            sourceItem: mainInterface
+            live: true
+            hideSource: root.crtEffectEnabled
         }
+        crtEffectEnabled: root.crtEffectEnabled
+        zoomFactor: 1.08
     }
 
     property string currentCollectionShortName: ""
@@ -352,6 +365,7 @@ FocusScope {
         } else {
             interfaceReady = true
         }
+        //soundEffects.playBackgroundMusic()
     }
 
     function initializeFirstCollection() {
@@ -381,7 +395,7 @@ FocusScope {
 
     function getCollectionDescription() {
         if (!currentCollectionShortName) {
-            return "Selecciona una colección para ver su descripción"
+            return "Select a collection to view its description"
         }
 
         var systemMetadata = collectionSummary.getSystemMetadata(currentCollectionShortName)
@@ -389,7 +403,7 @@ FocusScope {
             return systemMetadata.description
         }
 
-        return currentCollection ? (currentCollection.summary || "Sin descripción disponible") : "Sin descripción disponible"
+        return currentCollection ? (currentCollection.summary || "No description available") : "No description available"
     }
 
     function updateCollectionDescription() {
@@ -416,11 +430,16 @@ FocusScope {
         if (!interfaceReady) return
 
             if (api.keys.isAccept(event) && !gamesPathView.visible) {
+                soundEffects.playSelect()
                 showGamesPathView()
                 event.accepted = true
             } else if (api.keys.isCancel(event) && gamesPathView.visible) {
+                soundEffects.playBack()
                 hideGamesPathView()
                 event.accepted = true
+            } else if (api.keys.isCancel(event) && !gamesPathView.visible) {
+                soundEffects.playBack()
+                event.accepted = false
             }
     }
 
@@ -447,4 +466,3 @@ FocusScope {
         collectionTitleText.text = currentCollectionName
     }
 }
-
