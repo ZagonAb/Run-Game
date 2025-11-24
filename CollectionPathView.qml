@@ -84,11 +84,11 @@ PathView {
                 layer.enabled: true
                 layer.effect: DropShadow {
                     transparentBorder: true
-                    horizontalOffset: isCurrent ? 15 : 8
-                    verticalOffset: isCurrent ? 15 : 8
-                    radius: isCurrent ? 30 : 15
-                    samples: 30
-                    color: isCurrent ? "#CC000000" : "#80000000"
+                    horizontalOffset: isCurrent ? 10 : 5
+                    verticalOffset: isCurrent ? 10 : 5
+                    radius: isCurrent ? 20 : 5
+                    samples: 35
+                    color: isCurrent ? "#E6000000" : "#99000000"
                 }
             }
         }

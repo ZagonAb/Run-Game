@@ -33,8 +33,8 @@ PathView {
 
     delegate: Item {
         id: gameDelegateItem
-        width: gamesPathView.width * 0.5714 // 200px en 350 = ~57.1%
-        height: gamesPathView.height * 0.3889 // 280px en 720 = ~38.9%
+        width: gamesPathView.width * 0.5714
+        height: gamesPathView.height * 0.3889
 
         scale: PathView.scale
         opacity: {
@@ -42,35 +42,29 @@ PathView {
             var itemIndex = index
             var totalItems = gamesPathView.model.count
             var maxDistance = Math.floor(gamesPathView.pathItemCount / 2)
-
-            // Calcular distancia circular considerando el wrap-around
             var distance1 = Math.abs(itemIndex - centerIndex)
             var distance2 = totalItems - distance1
             var distance = Math.min(distance1, distance2)
 
-            // Si la distancia es mayor que maxDistance, usar opacidad mínima
             if (distance > maxDistance) {
                 return 0.1
             }
 
-            // Calcular opacidad gradual
             return Math.max(0.1, 1.0 - (distance / maxDistance) * 0.9)
         }
         z: PathView.z
 
         property bool isCurrent: PathView.isCurrentItem
 
-        // Contenedor con sombra
         Rectangle {
             id: gameBackground
             anchors.fill: parent
             color: "transparent"
 
-            // Imagen del juego (logo, screenshot, etc.)
             Image {
                 id: gameLogo
                 anchors.fill: parent
-                anchors.margins: parent.height * 0.0179 // 5px en 280 = ~1.8%
+                anchors.margins: parent.height * 0.0179
                 fillMode: Image.PreserveAspectFit
                 source: modelData ? (modelData.assets.logo || modelData.assets.screenshot || modelData.assets.boxFront || modelData.assets.titlescreen) : ""
                 mipmap: true
@@ -87,16 +81,15 @@ PathView {
                 layer.enabled: true
                 layer.effect: DropShadow {
                     transparentBorder: true
-                    horizontalOffset: isCurrent ? 8 : 4
-                    verticalOffset: isCurrent ? 8 : 4
-                    radius: isCurrent ? 20 : 12
-                    samples: 30
-                    color: isCurrent ? "#CC000000" : "#80000000"
+                    horizontalOffset: isCurrent ? 10 : 5
+                    verticalOffset: isCurrent ? 10 : 5
+                    radius: isCurrent ? 20 : 5
+                    samples: 35
+                    color: isCurrent ? "#E6000000" : "#99000000"
                 }
             }
         }
 
-        // Animación de escala suave para el item actual
         Behavior on scale {
             NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
         }
@@ -129,7 +122,6 @@ PathView {
     Component.onCompleted: {
         if (model && model.count > 0 && currentIndex === -1) {
             currentIndex = 0
-            // EMITIR LA SEÑAL PARA EL PRIMER JUEGO
             const selectedGame = model.get(0)
             if (selectedGame) {
                 gameChanged(selectedGame)
@@ -137,7 +129,6 @@ PathView {
         }
     }
 
-    // Navegación con teclado
     Keys.onPressed: {
         if (api.keys.isNextPage(event) || api.keys.isDown(event)) {
             incrementCurrentIndex()
@@ -156,7 +147,6 @@ PathView {
         }
     }
 
-    // Animación suave al cambiar de item
     highlightRangeMode: PathView.StrictlyEnforceRange
     flickDeceleration: 1000
     maximumFlickVelocity: 2000
