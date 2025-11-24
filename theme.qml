@@ -131,6 +131,7 @@ FocusScope {
                 currentGame = gameData
                 if (gameData) {
                     collectionTitleText.text = gameData.title
+                    updateGameDetails()
                 }
             }
 
@@ -155,7 +156,7 @@ FocusScope {
             anchors.left: parent.left
             anchors.leftMargin: root.width * 0.03906
             anchors.verticalCenter: parent.verticalCenter
-            spacing: root.height * 0.0278
+            spacing: root.height * 0.03
             opacity: interfaceReady ? 1 : 0
 
             Behavior on opacity {
@@ -271,6 +272,73 @@ FocusScope {
 
             Row {
                 width: parent.width
+                spacing: root.width * 0.02
+                visible: gamesPathView.visible && currentGame
+
+                Text {
+                    id: favoriteText
+                    text: "Favorite: " + (currentGame && currentGame.favorite ? "YES" : "NO")
+                    font.family: global.fonts.condensed
+                    font.pixelSize: root.height * 0.03
+                    color: "white"
+                    font.bold: true
+                    opacity: 0.8
+
+                    layer.enabled: true
+                    layer.effect: DropShadow {
+                        transparentBorder: true
+                        horizontalOffset: 2
+                        verticalOffset: 2
+                        radius: 4
+                        samples: 9
+                        color: "black"
+                    }
+                }
+
+                Text {
+                    id: lastPlayedText
+                    text: "Last Played: " + (currentGame && currentGame.lastPlayed && currentGame.lastPlayed.toString() !== "Invalid Date" ?
+                    Qt.formatDate(currentGame.lastPlayed, "dd/MM/yy") : "Never")
+                    font.family: global.fonts.condensed
+                    font.pixelSize: root.height * 0.03
+                    color: "white"
+                    font.bold: true
+                    opacity: 0.8
+
+                    layer.enabled: true
+                    layer.effect: DropShadow {
+                        transparentBorder: true
+                        horizontalOffset: 2
+                        verticalOffset: 2
+                        radius: 4
+                        samples: 9
+                        color: "black"
+                    }
+                }
+
+                Text {
+                    id: playTimeText
+                    text: "Play Time: " + (currentGame && currentGame.playTime ? formatPlayTime(currentGame.playTime) : "00:00:00")
+                    font.family: global.fonts.condensed
+                    font.pixelSize: root.height * 0.03
+                    color: "white"
+                    font.bold: true
+                    opacity: 0.8
+
+                    layer.enabled: true
+                    layer.effect: DropShadow {
+                        transparentBorder: true
+                        horizontalOffset: 2
+                        verticalOffset: 2
+                        radius: 4
+                        samples: 9
+                        color: "black"
+                    }
+                }
+            }
+
+            Row {
+                width: parent.width
                 spacing: root.width * 0.01
 
                 Text {
@@ -278,6 +346,7 @@ FocusScope {
                     font.family: global.fonts.condensed
                     font.pixelSize: root.height * 0.028
                     color: "white"
+                    font.bold: true
                     opacity: 0.8
                     visible: !gamesPathView.visible && interfaceReady
 
@@ -288,7 +357,7 @@ FocusScope {
                         verticalOffset: 2
                         radius: 4
                         samples: 9
-                        color: "#80000000"
+                        color: "black"
                     }
                 }
 
@@ -297,6 +366,7 @@ FocusScope {
                     font.family: global.fonts.condensed
                     font.pixelSize: root.height * 0.028
                     color: "white"
+                    font.bold: true
                     opacity: 0.8
                     visible: gamesPathView.visible
 
@@ -307,7 +377,7 @@ FocusScope {
                         verticalOffset: 2
                         radius: 4
                         samples: 9
-                        color: "#80000000"
+                        color: "black"
                     }
                 }
 
@@ -318,6 +388,7 @@ FocusScope {
                     font.pixelSize: root.height * 0.028
                     color: "#ffffff"
                     opacity: 0.8
+                    font.bold: true
                     visible: !gamesPathView.visible && currentCollection && interfaceReady
 
                     layer.enabled: true
@@ -327,7 +398,7 @@ FocusScope {
                         verticalOffset: 2
                         radius: 4
                         samples: 9
-                        color: "#80000000"
+                        color: "black"
                     }
                 }
             }
@@ -449,6 +520,27 @@ FocusScope {
         gamesCountText.text = getGamesCountText()
     }
 
+    function formatPlayTime(seconds) {
+        if (!seconds || seconds <= 0) return "00:00:00"
+
+            var hours = Math.floor(seconds / 3600)
+            var minutes = Math.floor((seconds % 3600) / 60)
+            var secs = seconds % 60
+
+            return (hours < 10 ? "0" + hours : hours) + ":" +
+            (minutes < 10 ? "0" + minutes : minutes) + ":" +
+            (secs < 10 ? "0" + secs : secs)
+    }
+
+    function updateGameDetails() {
+        if (currentGame) {
+            favoriteText.text = "Favorite: " + (currentGame.favorite ? "YES" : "NO")
+            lastPlayedText.text = "Last Played: " + (currentGame.lastPlayed && currentGame.lastPlayed.toString() !== "Invalid Date" ?
+            Qt.formatDate(currentGame.lastPlayed, "dd/MM/yy") : "Never")
+            playTimeText.text = "Play Time: " + formatPlayTime(currentGame.playTime)
+        }
+    }
+
     Keys.onPressed: {
         if (!interfaceReady) return
 
@@ -477,6 +569,7 @@ FocusScope {
             if (gamesPathView.model && gamesPathView.model.count > 0) {
                 currentGame = gamesPathView.model.get(0)
                 collectionTitleText.text = currentGame.title
+                updateGameDetails()
             }
         }
     }
