@@ -106,6 +106,27 @@ PathView {
                     color: isCurrent ? "#E6000000" : "#99000000"
                 }
             }
+
+            Text {
+                id: fallbackText
+                anchors.centerIn: parent
+                text: itemShortName !== "" ? itemShortName.toUpperCase() : "COL..."
+                font.family: global.fonts.sans
+                font.pixelSize: parent.height * 0.2
+                font.bold: true
+                color: "white"
+                visible: collectionIcon.status !== Image.Ready || collectionIcon.source === ""
+
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 3
+                    verticalOffset: 3
+                    radius: 8
+                    samples: 17
+                    color: "#99000000"
+                }
+            }
         }
 
         Behavior on scale {

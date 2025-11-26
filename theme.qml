@@ -430,7 +430,7 @@ FocusScope {
                 }
 
                 Text {
-                    text: "ENTER: play • ESC: return • X: toggle favorite"
+                    text: "ENTER: play • ESC: return • X: favorite • LB/RB: filter by letter"
                     font.family: global.fonts.condensed
                     font.pixelSize: root.height * 0.04
                     color: "white"
@@ -451,6 +451,45 @@ FocusScope {
                 }
             }
         }
+
+        Canvas {
+            id: pathViewIndicator
+            anchors {
+                right: parent.right
+                verticalCenter: parent.verticalCenter
+                rightMargin: root.width * 0.012
+            }
+            width: root.width * 0.06
+            height: root.width * 0.08
+
+            visible: true
+
+            onPaint: {
+                var ctx = getContext("2d");
+                ctx.reset();
+
+                ctx.fillStyle = "#B3FFFFFF";
+                ctx.strokeStyle = "#B3FFFFFF";
+                ctx.lineWidth = 2;
+
+                ctx.beginPath();
+                ctx.moveTo(width, 0);
+                ctx.lineTo(0, height / 2);
+                ctx.lineTo(width, height);
+                ctx.closePath();
+
+                ctx.fill();
+                ctx.stroke();
+            }
+
+            layer.enabled: true
+            layer.effect: Glow {
+                samples: 8
+                color: "#B3FFFFFF"
+                spread: 0.3
+                radius: 4
+            }
+        }
     }
 
     CRTEffect {
@@ -464,6 +503,7 @@ FocusScope {
         crtEffectEnabled: root.crtEffectEnabled
         zoomFactor: 1.08
     }
+
 
     property string currentCollectionShortName: ""
     property string currentCollectionName: ""
