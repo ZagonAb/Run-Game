@@ -7,6 +7,7 @@ Item {
     property alias menuNavigation: menuNavigationSound
     property alias back: backSound
     property alias select: selectSound
+    property alias favorite: favoriteSound
     property alias backgroundMusic: backgroundMusic
 
     SoundEffect {
@@ -18,13 +19,19 @@ Item {
     SoundEffect {
         id: backSound
         source: "assets/sound/back.wav"
-        volume: 0.7
+        volume: 0.3
     }
 
     SoundEffect {
         id: selectSound
         source: "assets/sound/select.wav"
         volume: 0.7
+    }
+
+    SoundEffect {
+        id: favoriteSound
+        source: "assets/sound/favorite.wav"
+        volume: 1.0
     }
 
     Audio {
@@ -49,6 +56,12 @@ Item {
     function playSelect() {
         if (selectSound.source !== "") {
             selectSound.play()
+        }
+    }
+
+    function playFavorite() {
+        if (favoriteSound.source !== "") {
+            favoriteSound.play()
         }
     }
 

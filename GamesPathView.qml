@@ -14,6 +14,7 @@ PathView {
 
     signal gameChanged(var gameData)
     signal gameSelected(var gameData)
+    signal favoriteToggled()
 
     property bool _initialized: false
 
@@ -79,6 +80,7 @@ PathView {
                 id: gameLogo
                 anchors.fill: parent
                 anchors.margins: parent.height * 0.0179
+                asynchronous: true
                 fillMode: Image.PreserveAspectFit
                 source: modelData ? (modelData.assets.logo || modelData.assets.screenshot || modelData.assets.boxFront || modelData.assets.titlescreen) : ""
                 mipmap: true
@@ -162,6 +164,45 @@ PathView {
         }
     }
 
+    function findOriginalGame(gameData) {
+        if (!gameData) return null
+
+            if (gameData.files && gameData.files.count > 0) {
+                var targetPath = gameData.files.get(0).path
+
+                for (var i = 0; i < api.allGames.count; i++) {
+                    var game = api.allGames.get(i)
+                    if (game.files && game.files.count > 0) {
+                        if (game.files.get(0).path === targetPath) {
+                            return game
+                        }
+                    }
+                }
+            }
+
+            if (gameData.collections && gameData.collections.count > 0) {
+                var targetCollection = gameData.collections.get(0).name
+
+                for (var j = 0; j < api.allGames.count; j++) {
+                    var game2 = api.allGames.get(j)
+                    if (game2.title === gameData.title &&
+                        game2.collections && game2.collections.count > 0 &&
+                        game2.collections.get(0).name === targetCollection) {
+                        return game2
+                        }
+                }
+            }
+
+            for (var k = 0; k < api.allGames.count; k++) {
+                var game3 = api.allGames.get(k)
+                if (game3.title === gameData.title) {
+                    return game3
+                }
+            }
+
+            return null
+    }
+
     Keys.onPressed: {
         if (api.keys.isNextPage(event) || api.keys.isDown(event)) {
             soundEffects.playNavigation()
@@ -176,10 +217,48 @@ PathView {
                 const selectedGame = model.get(currentIndex)
                 if (selectedGame) {
                     soundEffects.playSelect()
-                    gameSelected(selectedGame)
+                    const originalGame = findOriginalGame(selectedGame)
+                    if (originalGame && typeof originalGame.launch === "function") {
+                        originalGame.launch()
+                    } else {
+                        console.log("Error: No se pudo encontrar el juego original o launch() no está disponible")
+                    }
                     event.accepted = true
                 }
             }
+        } else if (api.keys.isDetails(event)) {
+            if (model && model.count > 0 && currentIndex >= 0) {
+                const selectedGame = model.get(currentIndex)
+                if (selectedGame) {
+                    const originalGame = findOriginalGame(selectedGame)
+                    if (originalGame) {
+                        originalGame.favorite = !originalGame.favorite
+                        soundEffects.playFavorite()
+
+                        favoriteToggled()
+
+                        Qt.callLater(function() {
+                            if (model.count > 0) {
+                                if (currentIndex < model.count) {
+                                    gameChanged(originalGame)
+                                } else if (model.count > 0) {
+                                    currentIndex = model.count - 1
+                                    var updatedGame = model.get(currentIndex)
+                                    var updatedOriginal = findOriginalGame(updatedGame)
+                                    gameChanged(updatedOriginal || updatedGame)
+                                }
+                            } else {
+                                gameChanged(null)
+                            }
+                        })
+
+                        event.accepted = true
+                    }
+                }
+            }
+        } else if (api.keys.isCancel(event)) {
+            soundEffects.playBack()
+            event.accepted = false
         }
     }
 

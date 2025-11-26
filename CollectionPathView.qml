@@ -83,6 +83,7 @@ PathView {
                 id: collectionIcon
                 anchors.fill: parent
                 anchors.margins: parent.height * 0.0179
+                asynchronous: true
                 fillMode: Image.PreserveAspectFit
                 source: itemShortName !== "" ? "assets/images/collections/" + itemShortName + ".png" : ""
                 mipmap: true

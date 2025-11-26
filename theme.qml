@@ -2,6 +2,7 @@ import QtQuick 2.15
 import QtQuick.Window 2.15
 import QtGraphicalEffects 1.12
 import SortFilterProxyModel 0.2
+import "utils.js" as Utils
 
 FocusScope {
     id: root
@@ -65,7 +66,7 @@ FocusScope {
                 return "assets/images/collections/default.png"
             }
             opacity: 0.8
-            visible: gamesPathView.visible
+            visible: gamesPathView.visible && !emptyCollectionText.visible
 
             layer.enabled: crtEffectEnabled
             layer.mipmap: true
@@ -76,6 +77,28 @@ FocusScope {
             anchors.fill: parent
             color: "#1a1a1a"
             opacity: 0.4
+        }
+
+        Text {
+            id: emptyCollectionText
+            anchors.centerIn: parent
+            text: "Collection Empty"
+            font.family: global.fonts.sans
+            font.pixelSize: root.height * 0.06
+            font.bold: true
+            color: "white"
+            opacity: 0.7
+            visible: gamesPathView.visible && gamesPathView.model && gamesPathView.model.count === 0
+
+            layer.enabled: true
+            layer.effect: DropShadow {
+                transparentBorder: true
+                horizontalOffset: 4
+                verticalOffset: 4
+                radius: 12
+                samples: 20
+                color: "#CC000000"
+            }
         }
 
         CollectionPathView {
@@ -98,7 +121,6 @@ FocusScope {
                 currentCollectionShortName = shortName
                 currentCollectionName = name
 
-                // Obtener la colección del modelo extendido
                 var collectionData = collectionsModel.getModel().get(collectionPathView.currentIndex)
                 currentCollection = collectionData
 
@@ -128,9 +150,11 @@ FocusScope {
             }
 
             onGameChanged: {
-                currentGame = gameData
-                if (gameData) {
-                    collectionTitleText.text = gameData.title
+                var originalGame = findOriginalGame(gameData)
+                currentGame = originalGame || gameData
+
+                if (currentGame) {
+                    collectionTitleText.text = Utils.cleanGameTitle(currentGame.title)
                     updateGameDetails()
                 }
             }
@@ -139,6 +163,20 @@ FocusScope {
                 if (gameData) {
                     gameData.launch()
                 }
+            }
+
+            onFavoriteToggled: {
+                updateGameDetails()
+                updateGamesCount()
+
+                Qt.callLater(function() {
+                    updateGamesCount()
+
+                    if (currentCollectionShortName === "favorite" &&
+                        gamesPathView.model && gamesPathView.model.count === 0) {
+                        hideGamesTimer.start()
+                        }
+                })
             }
 
             Keys.onPressed: {
@@ -150,65 +188,92 @@ FocusScope {
             }
         }
 
+        Timer {
+            id: hideGamesTimer
+            interval: 1500
+            onTriggered: {
+                hideGamesPathView()
+            }
+        }
+
+        Text {
+            id: collectionTitleText
+
+            text: {
+                if (gamesPathView.visible) {
+                    return currentGame ? Utils.cleanGameTitle(currentGame.title) : "Select a game"
+                } else {
+                    return currentCollectionName || "Loading..."
+                }
+            }
+
+            font.family: global.fonts.sans
+            font.pixelSize: {
+                var textLength = collectionTitleText.text.length
+                if (textLength <= 25) {
+                    return root.height * 0.07
+                } else if (textLength <= 30) {
+                    return root.height * 0.06
+                } else {
+                    return root.height * 0.045
+                }
+            }
+            font.bold: true
+            color: "white"
+            width: parent.width * 0.55
+            wrapMode: Text.Wrap
+            anchors {
+                left: parent.left
+                leftMargin: root.width * 0.036
+                top: parent.top
+                topMargin: root.height * 0.036
+            }
+
+            layer.enabled: true
+            layer.effect: DropShadow {
+                transparentBorder: true
+                horizontalOffset: 4
+                verticalOffset: 4
+                radius: 8
+                samples: 20
+                color: "#CC000000"
+            }
+        }
+
         Column {
             id: collectionInfo
             width: root.width * 0.55
             anchors.left: parent.left
             anchors.leftMargin: root.width * 0.03906
             anchors.verticalCenter: parent.verticalCenter
-            spacing: root.height * 0.03
+            spacing: root.height * 0.05
             opacity: interfaceReady ? 1 : 0
+            visible: !emptyCollectionText.visible
 
             Behavior on opacity {
                 NumberAnimation { duration: 400 }
             }
 
-            Text {
-                id: collectionTitleText
-                text: {
-                    if (gamesPathView.visible) {
-                        return currentGame ? currentGame.title : "Select a game"
-                    } else {
-                        return currentCollectionName || "Loading..."
+            Rectangle {
+                id: descriptionContainer
+                color: "#66000000"
+                width: parent.width
+                height: collectionDescription.height + 40
+                visible: !gamesPathView.visible
+
+                Text {
+                    id: collectionDescription
+                    text: getCollectionDescription()
+                    font.family: global.fonts.sans
+                    font.pixelSize: root.height * 0.035
+                    color: "white"
+                    width: parent.width - 40
+                    wrapMode: Text.Wrap
+                    lineHeight: 1.05
+                    visible: text !== "" && !gamesPathView.visible
+                    anchors {
+                        centerIn: parent
                     }
-                }
-                font.family: global.fonts.sans
-                font.pixelSize: root.height * 0.05
-                font.bold: true
-                color: "white"
-                width: parent.width
-                wrapMode: Text.Wrap
-
-                layer.enabled: true
-                layer.effect: DropShadow {
-                    transparentBorder: true
-                    horizontalOffset: 4
-                    verticalOffset: 4
-                    radius: 8
-                    samples: 20
-                    color: "#CC000000"
-                }
-            }
-
-            Text {
-                id: collectionDescription
-                text: getCollectionDescription()
-                font.family: global.fonts.sans
-                font.pixelSize: root.height * 0.035
-                color: "#eaeaea"
-                width: parent.width
-                wrapMode: Text.Wrap
-                lineHeight: 1.05
-                visible: text !== "" && !gamesPathView.visible
-
-                layer.enabled: true
-                layer.effect: DropShadow {
-                    transparentBorder: true
-                    horizontalOffset: 2
-                    verticalOffset: 2
-                    radius: 10
-                    samples: 20
-                    color: "#CC000000"
                 }
             }
 
@@ -217,7 +282,7 @@ FocusScope {
                 width: parent.width * 0.6
                 height: root.height * 0.65
                 spacing: root.height * 0.02
-                visible: gamesPathView.visible
+                visible: gamesPathView.visible && currentGame
 
                 Image {
                     id: gameBoxArt
@@ -270,135 +335,51 @@ FocusScope {
                 }
             }
 
-            Row {
-                width: parent.width
-                spacing: root.width * 0.02
+            Rectangle {
+                id: gameInfoContainer
+                color: "#B3000000"
+                width: gameInfoRow.width + 20
+                height: gameInfoRow.height + 10
                 visible: gamesPathView.visible && currentGame
 
-                Text {
-                    id: favoriteText
-                    text: "Favorite: " + (currentGame && currentGame.favorite ? "YES" : "NO")
-                    font.family: global.fonts.condensed
-                    font.pixelSize: root.height * 0.03
-                    color: "white"
-                    font.bold: true
-                    opacity: 0.8
+                Row {
+                    id: gameInfoRow
+                    anchors.centerIn: parent
+                    spacing: root.width * 0.02
 
-                    layer.enabled: true
-                    layer.effect: DropShadow {
-                        transparentBorder: true
-                        horizontalOffset: 2
-                        verticalOffset: 2
-                        radius: 4
-                        samples: 9
-                        color: "black"
+                    Text {
+                        id: favoriteText
+                        text: "Favorite: " + (currentGame && currentGame.favorite ? "YES" : "NO")
+                        font.family: global.fonts.condensed
+                        font.pixelSize: root.height * 0.03
+                        color: currentGame && currentGame.favorite ? "#FFD700" : "white"
+                        font.bold: true
+                        opacity: 0.9
+
+                        Behavior on color {
+                            ColorAnimation { duration: 200 }
+                        }
                     }
-                }
 
-                Text {
-                    id: lastPlayedText
-                    text: "Last Played: " + (currentGame && currentGame.lastPlayed && currentGame.lastPlayed.toString() !== "Invalid Date" ?
-                    Qt.formatDate(currentGame.lastPlayed, "dd/MM/yy") : "Never")
-                    font.family: global.fonts.condensed
-                    font.pixelSize: root.height * 0.03
-                    color: "white"
-                    font.bold: true
-                    opacity: 0.8
-
-                    layer.enabled: true
-                    layer.effect: DropShadow {
-                        transparentBorder: true
-                        horizontalOffset: 2
-                        verticalOffset: 2
-                        radius: 4
-                        samples: 9
-                        color: "black"
+                    Text {
+                        id: lastPlayedText
+                        text: "Last Played: " + (currentGame && currentGame.lastPlayed && currentGame.lastPlayed.toString() !== "Invalid Date" ?
+                        Qt.formatDate(currentGame.lastPlayed, "dd/MM/yy") : "Never")
+                        font.family: global.fonts.condensed
+                        font.pixelSize: root.height * 0.03
+                        color: "white"
+                        font.bold: true
+                        opacity: 0.8
                     }
-                }
 
-                Text {
-                    id: playTimeText
-                    text: "Play Time: " + (currentGame && currentGame.playTime ? formatPlayTime(currentGame.playTime) : "00:00:00")
-                    font.family: global.fonts.condensed
-                    font.pixelSize: root.height * 0.03
-                    color: "white"
-                    font.bold: true
-                    opacity: 0.8
-
-                    layer.enabled: true
-                    layer.effect: DropShadow {
-                        transparentBorder: true
-                        horizontalOffset: 2
-                        verticalOffset: 2
-                        radius: 4
-                        samples: 9
-                        color: "black"
-                    }
-                }
-            }
-
-            Row {
-                width: parent.width
-                spacing: root.width * 0.01
-
-                Text {
-                    text: "Press ENTER to view the games"
-                    font.family: global.fonts.condensed
-                    font.pixelSize: root.height * 0.028
-                    color: "white"
-                    font.bold: true
-                    opacity: 0.8
-                    visible: !gamesPathView.visible && interfaceReady
-
-                    layer.enabled: true
-                    layer.effect: DropShadow {
-                        transparentBorder: true
-                        horizontalOffset: 2
-                        verticalOffset: 2
-                        radius: 4
-                        samples: 9
-                        color: "black"
-                    }
-                }
-
-                Text {
-                    text: "Press ENTER to play • ESC to return"
-                    font.family: global.fonts.condensed
-                    font.pixelSize: root.height * 0.028
-                    color: "white"
-                    font.bold: true
-                    opacity: 0.8
-                    visible: gamesPathView.visible
-
-                    layer.enabled: true
-                    layer.effect: DropShadow {
-                        transparentBorder: true
-                        horizontalOffset: 2
-                        verticalOffset: 2
-                        radius: 4
-                        samples: 9
-                        color: "black"
-                    }
-                }
-
-                Text {
-                    id: gamesCountText
-                    text: getGamesCountText()
-                    font.family: global.fonts.condensed
-                    font.pixelSize: root.height * 0.028
-                    color: "#ffffff"
-                    opacity: 0.8
-                    font.bold: true
-                    visible: !gamesPathView.visible && currentCollection && interfaceReady
-
-                    layer.enabled: true
-                    layer.effect: DropShadow {
-                        transparentBorder: true
-                        horizontalOffset: 2
-                        verticalOffset: 2
-                        radius: 4
-                        samples: 9
-                        color: "black"
+                    Text {
+                        id: playTimeText
+                        text: "Play Time: " + (currentGame && currentGame.playTime ? formatPlayTime(currentGame.playTime) : "00:00:00")
+                        font.family: global.fonts.condensed
+                        font.pixelSize: root.height * 0.03
+                        color: "white"
+                        font.bold: true
+                        opacity: 0.8
                     }
                 }
             }
@@ -418,6 +399,56 @@ FocusScope {
                 font.family: global.fonts.sans
                 font.pixelSize: 30
                 color: "white"
+            }
+        }
+
+        Rectangle {
+            id: bottomTextContainer
+            color: "#B3000000"
+            anchors {
+                left: parent.left
+                leftMargin: root.width * 0.036
+                bottom: parent.bottom
+                bottomMargin: root.height * 0.045
+            }
+            width: bottomText.width + 20
+            height: bottomText.height + 10
+
+            Row {
+                id: bottomText
+                anchors.centerIn: parent
+                spacing: root.width * 0.01
+
+                Text {
+                    text: "Press ENTER to view the games"
+                    font.family: global.fonts.condensed
+                    font.pixelSize: root.height * 0.04
+                    color: "white"
+                    font.bold: true
+                    opacity: 0.8
+                    visible: !gamesPathView.visible && interfaceReady
+                }
+
+                Text {
+                    text: "ENTER: play • ESC: return • X: toggle favorite"
+                    font.family: global.fonts.condensed
+                    font.pixelSize: root.height * 0.04
+                    color: "white"
+                    font.bold: true
+                    opacity: 0.8
+                    visible: gamesPathView.visible
+                }
+
+                Text {
+                    id: gamesCountText
+                    text: getGamesCountText()
+                    font.family: global.fonts.condensed
+                    font.pixelSize: root.height * 0.04
+                    color: "#ffffff"
+                    opacity: 0.8
+                    font.bold: true
+                    visible: !gamesPathView.visible && currentCollection && interfaceReady
+                }
             }
         }
     }
@@ -445,7 +476,6 @@ FocusScope {
         } else {
             modelReadyConnection.enabled = true
         }
-        //soundEffects.playBackgroundMusic()
     }
 
     Connections {
@@ -506,18 +536,18 @@ FocusScope {
 
     function getGamesCountText() {
         if (!currentCollection || !currentCollection.games) {
-            return "GAMES: 0"
+            return "0"
         }
         var count = currentCollection.games.count
         if (count === 1) {
-            return "GAMES: 1"
+            return "1"
         } else {
-            return "GAMES: " + count
+            return ": " + count
         }
     }
 
     function updateGamesCount() {
-        gamesCountText.text = getGamesCountText()
+        gamesCountText.text = Qt.binding(function() { return getGamesCountText() })
     }
 
     function formatPlayTime(seconds) {
@@ -534,11 +564,63 @@ FocusScope {
 
     function updateGameDetails() {
         if (currentGame) {
-            favoriteText.text = "Favorite: " + (currentGame.favorite ? "YES" : "NO")
-            lastPlayedText.text = "Last Played: " + (currentGame.lastPlayed && currentGame.lastPlayed.toString() !== "Invalid Date" ?
-            Qt.formatDate(currentGame.lastPlayed, "dd/MM/yy") : "Never")
-            playTimeText.text = "Play Time: " + formatPlayTime(currentGame.playTime)
+            var originalGame = findOriginalGame(currentGame)
+            if (originalGame) {
+                currentGame = originalGame
+            }
+
+            favoriteText.text = Qt.binding(function() {
+                return "Favorite: " + (currentGame && currentGame.favorite ? "YES" : "NO")
+            })
+
+            lastPlayedText.text = Qt.binding(function() {
+                return "Last Played: " + (currentGame && currentGame.lastPlayed && currentGame.lastPlayed.toString() !== "Invalid Date" ?
+                Qt.formatDate(currentGame.lastPlayed, "dd/MM/yy") : "Never")
+            })
+
+            playTimeText.text = Qt.binding(function() {
+                return "Play Time: " + (currentGame && currentGame.playTime ? formatPlayTime(currentGame.playTime) : "00:00:00")
+            })
         }
+    }
+
+    function findOriginalGame(gameData) {
+        if (!gameData) return null
+
+            if (gameData.files && gameData.files.count > 0) {
+                var targetPath = gameData.files.get(0).path
+
+                for (var i = 0; i < api.allGames.count; i++) {
+                    var game = api.allGames.get(i)
+                    if (game.files && game.files.count > 0) {
+                        if (game.files.get(0).path === targetPath) {
+                            return game
+                        }
+                    }
+                }
+            }
+
+            if (gameData.collections && gameData.collections.count > 0) {
+                var targetCollection = gameData.collections.get(0).name
+
+                for (var j = 0; j < api.allGames.count; j++) {
+                    var game2 = api.allGames.get(j)
+                    if (game2.title === gameData.title &&
+                        game2.collections && game2.collections.count > 0 &&
+                        game2.collections.get(0).name === targetCollection) {
+                        return game2
+                        }
+                }
+            }
+
+            for (var k = 0; k < api.allGames.count; k++) {
+                var game3 = api.allGames.get(k)
+                if (game3.title === gameData.title) {
+                    return game3
+                }
+            }
+
+            return null
     }
 
     Keys.onPressed: {
@@ -559,17 +641,22 @@ FocusScope {
     }
 
     function showGamesPathView() {
-        if (currentCollection && currentCollection.games && currentCollection.games.count > 0) {
+        if (currentCollection && currentCollection.games) {
             gamesPathView.model = currentCollection.games
             gamesPathView.visible = true
             gamesPathView.opacity = 1
             gamesPathView.forceActiveFocus()
-            gamesPathView.currentIndex = 0
 
-            if (gamesPathView.model && gamesPathView.model.count > 0) {
-                currentGame = gamesPathView.model.get(0)
-                collectionTitleText.text = currentGame.title
+            if (currentCollection.games.count > 0) {
+                gamesPathView.currentIndex = 0
+                var firstGame = gamesPathView.model.get(0)
+                var originalGame = findOriginalGame(firstGame)
+                currentGame = originalGame ? originalGame : firstGame
+                collectionTitleText.text = Utils.cleanGameTitle(currentGame.title)
                 updateGameDetails()
+            } else {
+                currentGame = null
+                collectionTitleText.text = currentCollectionName
             }
         }
     }
@@ -580,5 +667,6 @@ FocusScope {
         currentGame = null
         collectionPathView.forceActiveFocus()
         collectionTitleText.text = currentCollectionName
+        updateGamesCount()
     }
 }
