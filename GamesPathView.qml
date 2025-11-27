@@ -380,7 +380,9 @@ PathView {
                         Qt.callLater(function() {
                             if (model.count > 0) {
                                 if (currentIndex < model.count) {
-                                    gameChanged(originalGame)
+                                    var updatedGame = model.get(currentIndex)
+                                    var updatedOriginal = findOriginalGame(updatedGame)
+                                    gameChanged(updatedOriginal || updatedGame)
                                 } else if (model.count > 0) {
                                     currentIndex = model.count - 1
                                     var updatedGame = model.get(currentIndex)

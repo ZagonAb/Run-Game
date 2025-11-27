@@ -12,6 +12,10 @@ FocusScope {
 
     property bool crtEffectEnabled: true
     property bool interfaceReady: false
+    property var currentGame: null
+    property string currentCollectionShortName: ""
+    property string currentCollectionName: ""
+    property var currentCollection: null
 
     CollectionsModel {
         id: collectionsModel
@@ -172,10 +176,28 @@ FocusScope {
                 Qt.callLater(function() {
                     updateGamesCount()
 
-                    if (currentCollectionShortName === "favorite" &&
-                        gamesPathView.model && gamesPathView.model.count === 0) {
-                        hideGamesTimer.start()
+                    if (currentCollectionShortName === "favorite") {
+                        if (gamesPathView.model && gamesPathView.model.count > 0 && gamesPathView.currentIndex >= 0) {
+                            var currentGameData = gamesPathView.model.get(gamesPathView.currentIndex)
+                            if (currentGameData) {
+                                var originalGame = findOriginalGame(currentGameData)
+                                currentGame = originalGame || currentGameData
+                                updateGameDetails()
+
+                                gameBoxArt.source = ""
+                                gameTitleScreen.source = ""
+                                gameBgImage.source = ""
+
+                                Qt.callLater(function() {
+                                    updateGameMediaSources()
+                                })
+                            }
+                        } else if (gamesPathView.model && gamesPathView.model.count === 0) {
+                            currentGame = null
+                            updateGameDetails()
+                            hideGamesTimer.start()
                         }
+                    }
                 })
             }
 
@@ -504,12 +526,6 @@ FocusScope {
         zoomFactor: 1.08
     }
 
-
-    property string currentCollectionShortName: ""
-    property string currentCollectionName: ""
-    property var currentCollection: null
-    property var currentGame: null
-
     Component.onCompleted: {
         if (collectionsModel.modelReady) {
             initializeFirstCollection()
@@ -609,6 +625,8 @@ FocusScope {
                 currentGame = originalGame
             }
 
+            collectionTitleText.text = Utils.cleanGameTitle(currentGame.title)
+
             favoriteText.text = Qt.binding(function() {
                 return "Favorite: " + (currentGame && currentGame.favorite ? "YES" : "NO")
             })
@@ -621,6 +639,11 @@ FocusScope {
             playTimeText.text = Qt.binding(function() {
                 return "Play Time: " + (currentGame && currentGame.playTime ? formatPlayTime(currentGame.playTime) : "00:00:00")
             })
+
+            updateGameMediaSources()
+        } else {
+            collectionTitleText.text = currentCollectionName
+            updateGameMediaSources()
         }
     }
 
@@ -708,5 +731,39 @@ FocusScope {
         collectionPathView.forceActiveFocus()
         collectionTitleText.text = currentCollectionName
         updateGamesCount()
+    }
+
+    function updateGameMediaSources() {
+        if (currentGame) {
+            if (currentGame.assets.boxFront && currentGame.assets.boxFront !== "") {
+                gameBoxArt.source = currentGame.assets.boxFront
+            } else if (currentGame.assets.screenshot && currentGame.assets.screenshot !== "") {
+                gameBoxArt.source = currentGame.assets.screenshot
+            } else {
+                gameBoxArt.source = "assets/images/collections/default.png"
+            }
+
+            if (currentGame.assets.titlescreen && currentGame.assets.titlescreen !== "") {
+                gameTitleScreen.source = currentGame.assets.titlescreen
+            } else if (currentGame.assets.screenshot && currentGame.assets.screenshot !== "") {
+                gameTitleScreen.source = currentGame.assets.screenshot
+            } else {
+                gameTitleScreen.source = "assets/images/collections/default.png"
+            }
+
+            if (currentGame.assets.background && currentGame.assets.background !== "") {
+                gameBgImage.source = currentGame.assets.background
+            } else if (currentGame.assets.screenshot && currentGame.assets.screenshot !== "") {
+                gameBgImage.source = currentGame.assets.screenshot
+            } else if (currentGame.assets.titlescreen && currentGame.assets.titlescreen !== "") {
+                gameBgImage.source = currentGame.assets.titlescreen
+            } else {
+                gameBgImage.source = "assets/images/collections/default.png"
+            }
+        } else {
+            gameBoxArt.source = "assets/images/collections/default.png"
+            gameTitleScreen.source = "assets/images/collections/default.png"
+            gameBgImage.source = "assets/images/collections/default.png"
+        }
     }
 }
