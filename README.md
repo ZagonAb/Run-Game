@@ -1,6 +1,6 @@
 # Run&Game
 
-- Run&Game a theme for pegasus Frontend.
+- Run&Game a theme for Pegasus Frontend.
 
 ![screen](https://github.com/ZagonAb/Run-Game/blob/1c6cad75af2a359f818ef4e4f6b0c4093379e01e/.meta/screenshots/screen0.png)
 
