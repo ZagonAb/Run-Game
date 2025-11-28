@@ -480,35 +480,55 @@ FocusScope {
             }
             width: root.width * 0.06
             height: root.width * 0.08
-
             visible: true
 
             onPaint: {
                 var ctx = getContext("2d");
                 ctx.reset();
+                var cornerRadius = 6;
+
+                ctx.fillStyle = "#80000000";
+                ctx.strokeStyle = "#80000000";
+                ctx.lineWidth = 2;
+                ctx.lineJoin = "round";
+                ctx.lineCap = "round";
+
+                ctx.beginPath();
+                ctx.moveTo(width - cornerRadius, cornerRadius);
+                ctx.quadraticCurveTo(width, 0, width - cornerRadius, cornerRadius);
+                ctx.lineTo(cornerRadius, height / 2 - cornerRadius);
+                ctx.quadraticCurveTo(0, height / 2, cornerRadius, height / 2 + cornerRadius);
+                ctx.lineTo(width - cornerRadius, height - cornerRadius);
+                ctx.quadraticCurveTo(width, height, width - cornerRadius, height - cornerRadius);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                var innerWidth = width * 0.4;
+                var innerHeight = height * 0.4;
+                var offsetX = (width - innerWidth) / 2;
+                var offsetY = (height - innerHeight) / 2;
+                var innerCornerRadius = 2;
 
                 ctx.fillStyle = "#B3FFFFFF";
                 ctx.strokeStyle = "#B3FFFFFF";
-                ctx.lineWidth = 2;
+                ctx.lineWidth = 1.5;
+                ctx.lineJoin = "round";
+                ctx.lineCap = "round";
 
                 ctx.beginPath();
-                ctx.moveTo(width, 0);
-                ctx.lineTo(0, height / 2);
-                ctx.lineTo(width, height);
+                ctx.moveTo(offsetX + innerWidth - innerCornerRadius, offsetY + innerCornerRadius);
+                ctx.quadraticCurveTo(offsetX + innerWidth, offsetY, offsetX + innerWidth - innerCornerRadius, offsetY + innerCornerRadius);
+                ctx.lineTo(offsetX + innerCornerRadius, offsetY + innerHeight / 2 - innerCornerRadius);
+                ctx.quadraticCurveTo(offsetX, offsetY + innerHeight / 2, offsetX + innerCornerRadius, offsetY + innerHeight / 2 + innerCornerRadius);
+                ctx.lineTo(offsetX + innerWidth - innerCornerRadius, offsetY + innerHeight - innerCornerRadius);
+                ctx.quadraticCurveTo(offsetX + innerWidth, offsetY + innerHeight, offsetX + innerWidth - innerCornerRadius, offsetY + innerHeight - innerCornerRadius);
                 ctx.closePath();
-
                 ctx.fill();
                 ctx.stroke();
             }
-
-            layer.enabled: true
-            layer.effect: Glow {
-                samples: 8
-                color: "#B3FFFFFF"
-                spread: 0.3
-                radius: 4
-            }
         }
+
     }
 
     CRTEffect {
