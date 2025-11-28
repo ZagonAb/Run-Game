@@ -83,14 +83,13 @@ PathView {
             Image {
                 id: gameLogo
                 anchors.fill: parent
-                anchors.margins: parent.height * 0.0179
+                anchors.margins: parent.height * 0.01
                 asynchronous: true
                 fillMode: Image.PreserveAspectFit
-                source: modelData ? (modelData.assets.logo || modelData.assets.screenshot || modelData.assets.boxFront || modelData.assets.titlescreen) : ""
+                source: modelData ? (modelData.assets.logo || "") : ""
                 mipmap: true
-                sourceSize.width: parent.width
-                sourceSize.height: parent.height
-
+                sourceSize { width: 256; height: 256 }
+                cache: true
                 scale: isCurrent && gameLogo.source !== "" ? 1.8 : 1.0
 
                 Behavior on scale {
@@ -113,7 +112,7 @@ PathView {
                 horizontalAlignment: Text.AlignHCenter
                 maximumLineCount: 3
                 elide: Text.ElideRight
-                visible: gameLogo.status !== Image.Ready || gameLogo.source === ""
+                visible: gameLogo.status !== Image.Ready || gameLogo.source === "" || gameLogo.source === "undefined"
 
                 layer.enabled: true
                 layer.effect: DropShadow {

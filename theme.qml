@@ -46,19 +46,13 @@ FocusScope {
             source: currentCollection ? "assets/images/collections/" + currentCollectionShortName + "-content.jpg" : ""
             opacity: interfaceReady ? 0.8 : 0
             visible: !gamesPathView.visible
-
-            layer.enabled: crtEffectEnabled
-            layer.mipmap: true
-            layer.smooth: true
-
-            Behavior on opacity {
-                NumberAnimation { duration: 300 }
-            }
+            mipmap: true
         }
 
         Image {
             id: gameBgImage
             anchors.fill: parent
+            sourceSize { width: 640; height: 480 }
             fillMode: Image.PreserveAspectCrop
             source: {
                 if (currentGame) {
@@ -71,10 +65,7 @@ FocusScope {
             }
             opacity: 0.8
             visible: gamesPathView.visible && !emptyCollectionText.visible
-
-            layer.enabled: crtEffectEnabled
-            layer.mipmap: true
-            layer.smooth: true
+            mipmap: true
         }
 
         Rectangle {
@@ -310,7 +301,10 @@ FocusScope {
                     id: gameBoxArt
                     width: parent.width
                     height: Math.min(parent.height * 0.6, width * 1.4)
+                    sourceSize { width: 256; height: 256 }
                     fillMode: Image.PreserveAspectFit
+                    asynchronous: true
+                    mipmap: true
                     source: {
                         if (currentGame) {
                             if (currentGame.assets.boxFront && currentGame.assets.boxFront !== "") return currentGame.assets.boxFront
@@ -335,7 +329,10 @@ FocusScope {
                     id: gameTitleScreen
                     width: parent.width
                     height: Math.min(parent.height * 0.4, width * 0.75)
+                    sourceSize { width: 256; height: 256 }
                     fillMode: Image.PreserveAspectFit
+                    asynchronous: true
+                    mipmap: true
                     source: {
                         if (currentGame) {
                             if (currentGame.assets.titlescreen && currentGame.assets.titlescreen !== "") return currentGame.assets.titlescreen
