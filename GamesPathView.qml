@@ -351,7 +351,7 @@ PathView {
             soundEffects.playNavigation()
             decrementCurrentIndex()
             event.accepted = true
-        } else if (api.keys.isAccept(event)) {
+        } else if (!event.isAutoRepeat && api.keys.isAccept(event)) {
             if (model && model.count > 0 && currentIndex >= 0) {
                 const selectedGame = model.get(currentIndex)
                 if (selectedGame) {
