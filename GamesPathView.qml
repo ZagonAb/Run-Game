@@ -358,6 +358,9 @@ PathView {
                     soundEffects.playSelect()
                     const originalGame = findOriginalGame(selectedGame)
                     if (originalGame && typeof originalGame.launch === "function") {
+                        gamesPathView.visible = false
+                        gamesPathView.opacity = 0
+                        gamesPathView.focus = false
                         originalGame.launch()
                     } else {
                         console.log("Error: The original game could not be found or launch() is unavailable")

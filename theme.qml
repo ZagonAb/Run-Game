@@ -16,6 +16,7 @@ FocusScope {
     property string currentCollectionShortName: ""
     property string currentCollectionName: ""
     property var currentCollection: null
+    property bool returningFromGame: false
 
     CollectionsModel {
         id: collectionsModel
@@ -543,6 +544,24 @@ FocusScope {
         zoomFactor: 1.08
     }
 
+    Connections {
+        target: root
+        function onActiveFocusChanged() {
+            if (root.activeFocus && gamesPathView.visible) {
+                resetToCollections()
+            }
+        }
+    }
+
+    Connections {
+        target: root.Window.window
+        function onActiveChanged() {
+            if (root.Window.window && root.Window.window.active && gamesPathView.visible) {
+                resetToCollections()
+            }
+        }
+    }
+
     Component.onCompleted: {
         if (collectionsModel.modelReady) {
             initializeFirstCollection()
@@ -722,6 +741,7 @@ FocusScope {
 
     function showGamesPathView() {
         if (currentCollection && currentCollection.games) {
+            returningFromGame = false
             gamesPathView.model = currentCollection.games
             gamesPathView.visible = true
             gamesPathView.opacity = 1
@@ -744,10 +764,35 @@ FocusScope {
     function hideGamesPathView() {
         gamesPathView.opacity = 0
         gamesPathView.visible = false
+        gamesPathView.focus = false
         currentGame = null
         collectionPathView.forceActiveFocus()
         collectionTitleText.text = currentCollectionName
         updateGamesCount()
+    }
+
+    function resetToCollections() {
+        returningFromGame = true
+        hideGamesPathView()
+        collectionPathView.currentIndex = 0
+
+        var model = collectionsModel.getModel()
+        if (model && model.count > 0) {
+            const firstCollection = model.get(0)
+            if (firstCollection) {
+                currentCollectionShortName = firstCollection.shortName
+                currentCollectionName = firstCollection.name
+                currentCollection = firstCollection
+                collectionTitleText.text = currentCollectionName
+                updateCollectionDescription()
+                updateGamesCount()
+            }
+        }
+
+        collectionPathView.forceActiveFocus()
+        Qt.callLater(function() {
+            returningFromGame = false
+        })
     }
 
     function updateGameMediaSources() {
