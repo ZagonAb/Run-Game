@@ -8,7 +8,7 @@ Item {
     property alias back: backSound
     property alias select: selectSound
     property alias favorite: favoriteSound
-    property alias backgroundMusic: backgroundMusic
+    //property alias backgroundMusic: backgroundMusic
 
     SoundEffect {
         id: menuNavigationSound
