@@ -34,12 +34,12 @@ Item {
         volume: 1.0
     }
 
-    Audio {
+    /*Audio {
         id: backgroundMusic
         source: "assets/sound/arcade-music.wav"
         volume: 0.5
         loops: Audio.Infinite
-    }
+    }*/
 
     function playNavigation() {
         if (menuNavigationSound.source !== "") {
