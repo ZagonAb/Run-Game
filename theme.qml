@@ -25,6 +25,9 @@ FocusScope {
     property bool shouldClearMemory: false
     property bool focusCorrectionInProgress: false
 
+    property bool gamesExpandedView: false
+    property bool navigationLocked: false
+
     CollectionsModel {
         id: collectionsModel
     }
@@ -202,6 +205,14 @@ FocusScope {
                     }
                 })
             }
+
+            onExpandedViewToggled: {
+                root.gamesExpandedView = isExpanded
+                root.navigationLocked = isExpanded
+                collectionInfo.opacity = isExpanded ? 0 : 1
+                bottomTextContainer.opacity = isExpanded ? 0 : 1
+                pathViewIndicator.opacity = isExpanded ? 0 : 1
+            }
         }
 
         Timer {
@@ -303,7 +314,7 @@ FocusScope {
                 Image {
                     id: gameBoxArt
                     width: parent.width
-                    height: Math.min(parent.height * 0.6, width * 1.4)
+                    height: Math.min(parent.height * 0.55, width * 1.04)
                     sourceSize { width: 256; height: 256 }
                     fillMode: Image.PreserveAspectFit
                     asynchronous: true
@@ -331,7 +342,7 @@ FocusScope {
                 Image {
                     id: gameTitleScreen
                     width: parent.width
-                    height: Math.min(parent.height * 0.4, width * 0.75)
+                    height: Math.min(parent.height * 0.5, width * 1.0)
                     sourceSize { width: 256; height: 256 }
                     fillMode: Image.PreserveAspectFit
                     asynchronous: true
@@ -452,7 +463,8 @@ FocusScope {
                 }
 
                 Text {
-                    text: "ENTER: play • ESC: return • X: favorite • LB/RB: filter by letter"
+                    text: "ENTER: play • ESC: return • X: favorite • LB/RB: filter by letter • " +
+                    (api.keys.getFiltersKeyName ? api.keys.getFiltersKeyName() : "F") + ": expanded view"
                     font.family: global.fonts.condensed
                     font.pixelSize: root.height * 0.04
                     color: "white"
@@ -532,6 +544,181 @@ FocusScope {
             }
         }
 
+        Item {
+            id: expandedGameView
+            anchors.fill: parent
+            visible: gamesExpandedView
+            z: 1000
+
+            Rectangle {
+                anchors.fill: parent
+                color: "#CC000000"
+            }
+
+            Row {
+                anchors.fill: parent
+                anchors.margins: 20
+                spacing: 20
+
+                Item {
+                    width: parent.width * 0.5 - parent.spacing * 0.5
+                    height: parent.height
+
+                    Rectangle {
+                        anchors.fill: parent
+                        color: "#33000000"
+                        radius: 8
+                    }
+
+                    Image {
+                        id: expandedBoxArt
+                        anchors.centerIn: parent
+                        width: Math.min(parent.width * 0.9, parent.height * 0.9)
+                        height: width * 1.04
+                        sourceSize { width: 512; height: 512 }
+                        fillMode: Image.PreserveAspectFit
+                        asynchronous: true
+                        mipmap: true
+                        source: {
+                            if (currentGame) {
+                                if (currentGame.assets.boxFront && currentGame.assets.boxFront !== "") return currentGame.assets.boxFront
+                                    if (currentGame.assets.screenshot && currentGame.assets.screenshot !== "") return currentGame.assets.screenshot
+                                        return "assets/images/collections/default.png"
+                            }
+                            return "assets/images/collections/default.png"
+                        }
+
+                        layer.enabled: true
+                        layer.effect: DropShadow {
+                            transparentBorder: true
+                            horizontalOffset: 8
+                            verticalOffset: 8
+                            radius: 20
+                            samples: 25
+                            color: "#CC000000"
+                        }
+                    }
+
+                    Text {
+                        anchors {
+                            top: parent.top
+                            topMargin: 20
+                            horizontalCenter: parent.horizontalCenter
+                        }
+                        text: "BOX ART"
+                        font.family: global.fonts.sans
+                        font.pixelSize: root.height * 0.03
+                        font.bold: true
+                        color: "white"
+
+                        layer.enabled: true
+                        layer.effect: DropShadow {
+                            transparentBorder: true
+                            horizontalOffset: 2
+                            verticalOffset: 2
+                            radius: 4
+                            samples: 9
+                            color: "#99000000"
+                        }
+                    }
+                }
+
+                Item {
+                    width: parent.width * 0.5 - parent.spacing * 0.5
+                    height: parent.height
+
+                    Rectangle {
+                        anchors.fill: parent
+                        color: "#33000000"
+                        radius: 8
+                    }
+
+                    Image {
+                        id: expandedTitleScreen
+                        anchors.centerIn: parent
+                        width: Math.min(parent.width * 0.9, parent.height * 0.9)
+                        height: width * 1.0
+                        sourceSize { width: 512; height: 512 }
+                        fillMode: Image.PreserveAspectFit
+                        asynchronous: true
+                        mipmap: true
+                        source: {
+                            if (currentGame) {
+                                if (currentGame.assets.titlescreen && currentGame.assets.titlescreen !== "") return currentGame.assets.titlescreen
+                                    if (currentGame.assets.screenshot && currentGame.assets.screenshot !== "") return currentGame.assets.screenshot
+                                        return "assets/images/collections/default.png"
+                            }
+                            return "assets/images/collections/default.png"
+                        }
+
+                        layer.enabled: true
+                        layer.effect: DropShadow {
+                            transparentBorder: true
+                            horizontalOffset: 8
+                            verticalOffset: 8
+                            radius: 20
+                            samples: 25
+                            color: "#CC000000"
+                        }
+                    }
+
+                    Text {
+                        anchors {
+                            top: parent.top
+                            topMargin: 20
+                            horizontalCenter: parent.horizontalCenter
+                        }
+                        text: "TITLE SCREEN, SCREENSHOT"
+                        font.family: global.fonts.sans
+                        font.pixelSize: root.height * 0.03
+                        font.bold: true
+                        color: "white"
+
+                        layer.enabled: true
+                        layer.effect: DropShadow {
+                            transparentBorder: true
+                            horizontalOffset: 2
+                            verticalOffset: 2
+                            radius: 4
+                            samples: 9
+                            color: "#99000000"
+                        }
+                    }
+                }
+            }
+
+            Text {
+                anchors {
+                    bottom: parent.bottom
+                    bottomMargin: 20
+                    horizontalCenter: parent.horizontalCenter
+                }
+                text: "Press " + (api.keys.getFiltersKeyName ? api.keys.getFiltersKeyName() : "F") + " to return"
+                font.family: global.fonts.condensed
+                font.pixelSize: root.height * 0.025
+                color: "white"
+                opacity: 0.8
+
+                layer.enabled: true
+                layer.effect: DropShadow {
+                    transparentBorder: true
+                    horizontalOffset: 2
+                    verticalOffset: 2
+                    radius: 4
+                    samples: 9
+                    color: "#99000000"
+                }
+            }
+
+            Keys.onPressed: {
+                if (api.keys.isFilters(event)) {
+                    gamesPathView.toggleExpandedView()
+                    event.accepted = true
+                } else {
+                    event.accepted = true
+                }
+            }
+        }
     }
 
     CRTEffect {
@@ -796,6 +983,8 @@ FocusScope {
             return
         }
 
+        gamesExpandedView = false
+        navigationLocked = false
         isShowingGames = true
         focusCorrectionInProgress = true
 
@@ -853,6 +1042,9 @@ FocusScope {
         if (focusCorrectionInProgress || !gamesPathView.visible) {
             return
         }
+
+        gamesExpandedView = false
+        navigationLocked = false
 
         focusCorrectionInProgress = true
         isShowingGames = false

@@ -6,6 +6,7 @@ PathView {
     id: gamesPathView
     width: parent.width * 0.20
     height: parent.height
+
     anchors {
         right: parent.right
         rightMargin: 0
@@ -13,6 +14,7 @@ PathView {
 
     focus: true
 
+    signal expandedViewToggled(bool isExpanded)
     signal gameChanged(var gameData)
     signal gameSelected(var gameData)
     signal favoriteToggled()
@@ -21,6 +23,8 @@ PathView {
     property var letterIndex: ({})
     property var availableLetters: []
     property string currentLetter: ""
+    property bool expandedView: false
+    property var rootRef: null
 
     pathItemCount: 9
     preferredHighlightBegin: 0.5
@@ -213,6 +217,17 @@ PathView {
         }
     }
 
+    function toggleExpandedView() {
+        expandedView = !expandedView
+        expandedViewToggled(expandedView)
+
+        if (expandedView) {
+            soundEffects.playSelect()
+        } else {
+            soundEffects.playBack()
+        }
+    }
+
     function buildLetterIndex() {
         if (!model) return
 
@@ -349,6 +364,17 @@ PathView {
             return
         }
 
+        if (api.keys.isFilters(event)) {
+            toggleExpandedView()
+            event.accepted = true
+            return
+        }
+
+        if (expandedView) {
+            event.accepted = true
+            return
+        }
+
         if (api.keys.isNextPage(event)) {
             soundEffects.playFavorite()
             jumpToNextLetter()
@@ -374,9 +400,8 @@ PathView {
                     if (originalGame && typeof originalGame.launch === "function") {
                         var collectionIndex = collectionPathViewRef.currentIndex
                         var gameIndex = gamesPathView.currentIndex
-                        rootRef.saveStateBeforeLaunch(collectionIndex, gameIndex)
+                        saveGameState(collectionIndex, gameIndex)
                         originalGame.launch()
-                    } else {
                     }
                     event.accepted = true
                 }
@@ -413,6 +438,23 @@ PathView {
             }
         } else {
             event.accepted = false
+        }
+    }
+
+    function saveGameState(collectionIndex, gameIndex) {
+        if (rootRef && typeof rootRef.saveStateBeforeLaunch === "function") {
+            rootRef.saveStateBeforeLaunch(collectionIndex, gameIndex)
+        } else if (collectionPathViewRef && collectionPathViewRef.rootRef) {
+            collectionPathViewRef.rootRef.saveStateBeforeLaunch(collectionIndex, gameIndex)
+        } else {
+            var currentGame = model.get(gameIndex)
+            var gameTitle = currentGame ? currentGame.title : ""
+
+            if (typeof api !== "undefined" && api.memory) {
+                api.memory.set('lastCollectionIndex', collectionIndex)
+                api.memory.set('lastGameTitle', gameTitle)
+                api.memory.set('wasInGamesView', true)
+            }
         }
     }
 
