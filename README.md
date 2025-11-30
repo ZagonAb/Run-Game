@@ -2,9 +2,11 @@
 
 - Run&Game a theme for Pegasus Frontend.
 
-![screen](https://github.com/ZagonAb/Run-Game/blob/1c6cad75af2a359f818ef4e4f6b0c4093379e01e/.meta/screenshots/screen0.png)
+![screen](https://github.com/ZagonAb/Run-Game/blob/cd70a06816ed825a2d83fd4be5978153aac9e559/.meta/screenshots/screen0.png)
 
-![screen1](https://github.com/ZagonAb/Run-Game/blob/1c6cad75af2a359f818ef4e4f6b0c4093379e01e/.meta/screenshots/screen1.png)
+![screen1](https://github.com/ZagonAb/Run-Game/blob/cd70a06816ed825a2d83fd4be5978153aac9e559/.meta/screenshots/screen1.png)
+
+![screen2](https://github.com/ZagonAb/Run-Game/blob/cd70a06816ed825a2d83fd4be5978153aac9e559/.meta/screenshots/screen2.png)
 
 ## Sound Credits
 
