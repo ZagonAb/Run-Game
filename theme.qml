@@ -17,6 +17,13 @@ FocusScope {
     property string currentCollectionName: ""
     property var currentCollection: null
     property bool returningFromGame: false
+    property int savedCollectionIndex: -1
+    property int savedGameIndex: -1
+    property bool shouldRestoreState: false
+    property bool isShowingGames: false
+    property bool restoringPosition: false
+    property bool shouldClearMemory: false
+    property bool focusCorrectionInProgress: false
 
     CollectionsModel {
         id: collectionsModel
@@ -141,6 +148,9 @@ FocusScope {
             visible: false
             opacity: 0
 
+            property var collectionPathViewRef: collectionPathView
+            property var rootRef: root
+
             Behavior on opacity {
                 NumberAnimation { duration: 400 }
             }
@@ -191,14 +201,6 @@ FocusScope {
                         }
                     }
                 })
-            }
-
-            Keys.onPressed: {
-                if (api.keys.isCancel(event)) {
-                    soundEffects.playBack()
-                    hideGamesPathView()
-                    event.accepted = true
-                }
             }
         }
 
@@ -562,27 +564,65 @@ FocusScope {
         }
     }
 
-    Component.onCompleted: {
-        if (collectionsModel.modelReady) {
-            initializeFirstCollection()
-        } else {
-            modelReadyConnection.enabled = true
-        }
-    }
-
     Connections {
         id: modelReadyConnection
         target: collectionsModel
         enabled: false
         function onModelReadyChanged() {
             if (collectionsModel.modelReady) {
-                initializeFirstCollection()
-                modelReadyConnection.enabled = false
+                Qt.callLater(function() {
+                    if (!restoreState()) {
+                        initializeFirstCollection()
+                    }
+                    modelReadyConnection.enabled = false
+                })
+            }
+        }
+    }
+
+    Component.onCompleted: {
+        if (collectionsModel.modelReady) {
+            Qt.callLater(function() {
+                if (restoreState()) {
+                } else {
+                    initializeFirstCollection()
+                }
+            })
+        } else {
+            modelReadyConnection.enabled = true
+        }
+
+        Qt.callLater(function() {
+            focusCheckTimer.interval = 500
+            focusCheckTimer.start()
+        })
+    }
+
+    Timer {
+        id: focusCheckTimer
+        interval: 200
+        onTriggered: {
+            focusChecker.start()
+        }
+    }
+
+    Timer {
+        id: focusChecker
+        interval: 200
+        running: false
+        repeat: false
+        onTriggered: {
+            if (gamesPathView.visible && !gamesPathView.activeFocus && collectionPathView.activeFocus) {
+                gamesPathView.forceActiveFocus()
+            } else if (!gamesPathView.visible && !collectionPathView.activeFocus && gamesPathView.activeFocus) {
+                collectionPathView.forceActiveFocus()
             }
         }
     }
 
     function initializeFirstCollection() {
+        restoringPosition = false
+
         var model = collectionsModel.getModel()
         if (model && model.count > 0) {
             collectionPathView.currentIndex = 0
@@ -725,55 +765,259 @@ FocusScope {
     Keys.onPressed: {
         if (!interfaceReady) return
 
+            if (event.isAutoRepeat) {
+                event.accepted = true
+                return
+            }
+
             if (api.keys.isAccept(event) && !gamesPathView.visible) {
                 soundEffects.playSelect()
                 showGamesPathView()
                 event.accepted = true
-            } else if (api.keys.isCancel(event) && gamesPathView.visible) {
+            } else if (api.keys.isCancel(event)) {
                 soundEffects.playBack()
-                hideGamesPathView()
-                event.accepted = true
-            } else if (api.keys.isCancel(event) && !gamesPathView.visible) {
-                soundEffects.playBack()
+
+                if (gamesPathView.visible) {
+                    clearThemeMemory()
+                    hideGamesPathView()
+                    event.accepted = true
+                } else {
+
+                    event.accepted = false
+                }
+            } else {
                 event.accepted = false
             }
     }
 
     function showGamesPathView() {
+
+        if (isShowingGames || focusCorrectionInProgress || gamesPathView.visible) {
+            return
+        }
+
+        isShowingGames = true
+        focusCorrectionInProgress = true
+
         if (currentCollection && currentCollection.games) {
             returningFromGame = false
             gamesPathView.model = currentCollection.games
             gamesPathView.visible = true
             gamesPathView.opacity = 1
-            gamesPathView.forceActiveFocus()
 
-            if (currentCollection.games.count > 0) {
+            if (shouldRestoreState && savedGameIndex >= 0 && savedGameIndex < currentCollection.games.count) {
+                gamesPathView.currentIndex = savedGameIndex
+                var savedGame = gamesPathView.model.get(savedGameIndex)
+                var originalGame = findOriginalGame(savedGame)
+                currentGame = originalGame ? originalGame : savedGame
+                collectionTitleText.text = Utils.cleanGameTitle(currentGame.title)
+                updateGameDetails()
+                shouldRestoreState = false
+                savedGameIndex = -1
+
+                Qt.callLater(function() {
+                    gamesPathView.forceActiveFocus()
+                    isShowingGames = false
+                    focusCorrectionInProgress = false
+                })
+            } else if (currentCollection.games.count > 0) {
                 gamesPathView.currentIndex = 0
                 var firstGame = gamesPathView.model.get(0)
                 var originalGame = findOriginalGame(firstGame)
                 currentGame = originalGame ? originalGame : firstGame
                 collectionTitleText.text = Utils.cleanGameTitle(currentGame.title)
                 updateGameDetails()
+
+                Qt.callLater(function() {
+                    gamesPathView.forceActiveFocus()
+                    isShowingGames = false
+                    focusCorrectionInProgress = false
+                })
             } else {
                 currentGame = null
                 collectionTitleText.text = currentCollectionName
+                Qt.callLater(function() {
+                    gamesPathView.forceActiveFocus()
+                    isShowingGames = false
+                    focusCorrectionInProgress = false
+                })
             }
+        } else {
+            isShowingGames = false
+            focusCorrectionInProgress = false
         }
     }
 
     function hideGamesPathView() {
+
+        if (focusCorrectionInProgress || !gamesPathView.visible) {
+            return
+        }
+
+        focusCorrectionInProgress = true
+        isShowingGames = false
+
         gamesPathView.opacity = 0
         gamesPathView.visible = false
-        gamesPathView.focus = false
         currentGame = null
-        collectionPathView.forceActiveFocus()
+
+        clearThemeMemory()
+
+        shouldRestoreState = false
+        savedGameIndex = -1
+        restoringPosition = false
+
         collectionTitleText.text = currentCollectionName
         updateGamesCount()
+
+        Qt.callLater(function() {
+            collectionPathView.forceActiveFocus()
+
+            Qt.callLater(function() {
+                focusCorrectionInProgress = false
+            })
+        })
+    }
+
+    function saveStateBeforeLaunch(collectionIndex, gameIndex) {
+        var currentGame = gamesPathView.model.get(gameIndex)
+        var gameTitle = currentGame ? currentGame.title : ""
+
+        api.memory.set('lastCollectionIndex', collectionIndex)
+        api.memory.set('lastGameTitle', gameTitle)
+        api.memory.set('wasInGamesView', true)
+
+        shouldClearMemory = false
+        restoringPosition = false
+    }
+
+    function clearThemeMemory() {
+        var hasLastCollection = api.memory.has('lastCollectionIndex')
+        var hasLastGame = api.memory.has('lastGameTitle')
+        var hasWasInGamesView = api.memory.has('wasInGamesView')
+
+        if (hasLastCollection || hasLastGame || hasWasInGamesView) {
+            api.memory.unset('lastCollectionIndex')
+            api.memory.unset('lastGameTitle')
+            api.memory.unset('wasInGamesView')
+        }
+        shouldClearMemory = false
+    }
+
+    function restoreState() {
+        if (returningFromGame || focusCorrectionInProgress) {
+            clearThemeMemory()
+            return false
+        }
+
+        var lastCollectionIndex = api.memory.get('lastCollectionIndex') || 0
+        var lastGameTitle = api.memory.get('lastGameTitle') || ""
+        var wasInGamesView = api.memory.get('wasInGamesView') || false
+
+        if (wasInGamesView && collectionsModel.modelReady && lastGameTitle !== "") {
+            restoringPosition = true
+
+            var model = collectionsModel.getModel()
+            if (model && model.count > lastCollectionIndex) {
+                collectionPathView.currentIndex = lastCollectionIndex
+                const savedCollection = model.get(lastCollectionIndex)
+                if (savedCollection) {
+                    currentCollectionShortName = savedCollection.shortName
+                    currentCollectionName = savedCollection.name
+                    currentCollection = savedCollection
+                    updateCollectionDescription()
+                    updateGamesCount()
+                    collectionTitleText.text = currentCollectionName
+
+                    Qt.callLater(function() {
+                        var gameIndex = findGameIndexByTitle(lastGameTitle, currentCollection.games)
+
+                        if (gameIndex >= 0) {
+                            savedCollectionIndex = lastCollectionIndex
+                            savedGameIndex = gameIndex
+                            shouldRestoreState = true
+                            restoreTimer.start()
+                        } else {
+                            restoringPosition = false
+                            clearThemeMemory()
+                            shouldRestoreState = false
+                            savedGameIndex = -1
+                            restoreTimer.start()
+                        }
+                    })
+                    return true
+                }
+            }
+        }
+
+        clearThemeMemory()
+        shouldRestoreState = false
+        savedGameIndex = -1
+        return false
+    }
+
+    function findGameIndexByTitle(gameTitle, gamesModel) {
+        if (!gameTitle || !gamesModel || gamesModel.count === 0) {
+            return -1
+        }
+
+        var cleanTargetTitle = Utils.cleanGameTitle(gameTitle).toLowerCase()
+
+        for (var i = 0; i < gamesModel.count; i++) {
+            var game = gamesModel.get(i)
+            if (game && game.title) {
+                var cleanGameTitle = Utils.cleanGameTitle(game.title).toLowerCase()
+                if (cleanGameTitle === cleanTargetTitle) {
+                    return i
+                }
+            }
+        }
+
+        for (var j = 0; j < gamesModel.count; j++) {
+            var game2 = gamesModel.get(j)
+            if (game2 && game2.title) {
+                var cleanGameTitle2 = Utils.cleanGameTitle(game2.title).toLowerCase()
+                if (cleanGameTitle2.indexOf(cleanTargetTitle) !== -1 ||
+                    cleanTargetTitle.indexOf(cleanGameTitle2) !== -1) {
+                    return j
+                    }
+            }
+        }
+
+        return -1
+    }
+
+    Timer {
+        id: restoreTimer
+        interval: 100
+        onTriggered: {
+
+            if (shouldRestoreState) {
+                showGamesPathView()
+            } else {
+                initializeFirstCollection()
+            }
+
+            Qt.callLater(function() {
+                restoringPosition = false
+                if (shouldRestoreState) {
+                    clearMemoryTimer.start()
+                }
+            })
+        }
     }
 
     function resetToCollections() {
         returningFromGame = true
         hideGamesPathView()
+
+        if (!restoringPosition) {
+            clearThemeMemory()
+        } else {
+            shouldClearMemory = true
+            clearMemoryTimer.start()
+        }
+
         collectionPathView.currentIndex = 0
 
         var model = collectionsModel.getModel()
@@ -792,6 +1036,7 @@ FocusScope {
         collectionPathView.forceActiveFocus()
         Qt.callLater(function() {
             returningFromGame = false
+            restoringPosition = false
         })
     }
 

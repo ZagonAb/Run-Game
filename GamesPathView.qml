@@ -26,6 +26,27 @@ PathView {
     preferredHighlightBegin: 0.5
     preferredHighlightEnd: 0.5
 
+    onVisibleChanged: {
+        if (visible) {
+            Qt.callLater(function() {
+                if (!activeFocus) {
+                    forceActiveFocus()
+                }
+            })
+        }
+    }
+
+    onActiveFocusChanged: {
+
+        if (visible && !activeFocus && !focusCorrectionInProgress) {
+            Qt.callLater(function() {
+                if (visible && !activeFocus) {
+                    forceActiveFocus()
+                }
+            })
+        }
+    }
+
     path: Path {
         startX: gamesPathView.width - 30; startY: 0
 
@@ -154,18 +175,6 @@ PathView {
 
         Behavior on opacity {
             NumberAnimation { duration: 300 }
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            onClicked: {
-                soundEffects.playNavigation()
-                gamesPathView.currentIndex = index
-                gamesPathView.gameChanged(modelData)
-            }
-            onDoubleClicked: {
-                gamesPathView.gameSelected(modelData)
-            }
         }
     }
 
@@ -335,6 +344,11 @@ PathView {
     }
 
     Keys.onPressed: {
+        if (!activeFocus || !visible) {
+            event.accepted = false
+            return
+        }
+
         if (api.keys.isNextPage(event)) {
             soundEffects.playFavorite()
             jumpToNextLetter()
@@ -358,12 +372,11 @@ PathView {
                     soundEffects.playSelect()
                     const originalGame = findOriginalGame(selectedGame)
                     if (originalGame && typeof originalGame.launch === "function") {
-                        gamesPathView.visible = false
-                        gamesPathView.opacity = 0
-                        gamesPathView.focus = false
+                        var collectionIndex = collectionPathViewRef.currentIndex
+                        var gameIndex = gamesPathView.currentIndex
+                        rootRef.saveStateBeforeLaunch(collectionIndex, gameIndex)
                         originalGame.launch()
                     } else {
-                        console.log("Error: The original game could not be found or launch() is unavailable")
                     }
                     event.accepted = true
                 }
@@ -376,7 +389,6 @@ PathView {
                     if (originalGame) {
                         originalGame.favorite = !originalGame.favorite
                         soundEffects.playFavorite()
-
                         favoriteToggled()
 
                         Qt.callLater(function() {
@@ -395,13 +407,11 @@ PathView {
                                 gameChanged(null)
                             }
                         })
-
                         event.accepted = true
                     }
                 }
             }
-        } else if (api.keys.isCancel(event)) {
-            soundEffects.playBack()
+        } else {
             event.accepted = false
         }
     }

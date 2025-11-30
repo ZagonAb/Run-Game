@@ -19,6 +19,10 @@ PathView {
     preferredHighlightBegin: 0.5
     preferredHighlightEnd: 0.5
 
+    onActiveFocusChanged: {
+        console.log("CollectionPathView focus changed to:", activeFocus, "visible:", visible)
+    }
+
     path: Path {
         startX: collectionPathView.width - 30; startY: 0
 
@@ -152,10 +156,12 @@ PathView {
 
     Component.onCompleted: {
         if (model && model.count > 0) {
-            currentIndex = 0
-            const firstCollection = model.get(0)
-            if (firstCollection) {
-                collectionChanged(firstCollection.shortName, firstCollection.name)
+            if (currentIndex === -1) {
+                currentIndex = 0
+                const firstCollection = model.get(0)
+                if (firstCollection) {
+                    collectionChanged(firstCollection.shortName, firstCollection.name)
+                }
             }
             _initialized = true
         }
