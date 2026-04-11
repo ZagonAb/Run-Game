@@ -13,6 +13,7 @@ PathView {
     focus: true
 
     signal collectionChanged(string shortName, string name)
+    signal collectionActivated()
     property bool _initialized: false
 
     pathItemCount: 9
@@ -69,7 +70,7 @@ PathView {
                 return Math.max(0.1, 0.6 - ((distance - 1) / maxDistance) * 0.5)
         }
 
-        z: PathView.z !== undefined ? PathView.z : 0
+        z: PathView.isCurrentItem ? 1000 : (PathView.z !== undefined ? PathView.z : 0)
 
         property bool isCurrent: PathView.isCurrentItem
         property string itemShortName: {
@@ -78,10 +79,16 @@ PathView {
                     return ""
         }
 
-        Rectangle {
-            id: background
-            anchors.fill: parent
-            color: "transparent"
+        Item {
+            anchors.centerIn: parent
+            width: parent.width
+            height: parent.height * 0.2
+            Rectangle {
+                id: background
+                anchors.fill: parent
+                color: "transparent"
+                z: -1
+            }
 
             Image {
                 id: collectionIcon
@@ -116,7 +123,7 @@ PathView {
                 anchors.centerIn: parent
                 text: itemShortName !== "" ? itemShortName.toUpperCase() : "COL..."
                 font.family: global.fonts.sans
-                font.pixelSize: parent.height * 0.2
+                font.pixelSize: vpx(32)
                 font.bold: true
                 color: "white"
                 visible: collectionIcon.status !== Image.Ready || collectionIcon.source === ""
@@ -131,6 +138,180 @@ PathView {
                     color: "#99000000"
                 }
             }
+
+            Rectangle {
+                id: longPressIndicator
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 5
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: parent.width * 0.8
+                height: 6
+                color: "#00E5FF"
+                radius: 1.5
+                visible: false
+                opacity: 0.8
+                z: 1001
+
+                Rectangle {
+                    id: progressBar
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.bottom: parent.bottom
+                    width: 0
+                    color: "#00E5FF"
+                    radius: 1.5
+                }
+            }
+
+            MouseArea {
+                id: mouseArea
+                anchors.fill: parent
+                z: 1002
+
+                property real pressX: 0
+                property real pressY: 0
+                property bool didDrag: false
+                property bool longPressTriggered: false
+                property bool doubleClickTriggered: false
+                property int clickCount: 0
+                property int savedIndex: -1
+
+                Timer {
+                    id: doubleClickTimer
+                    interval: 400
+                    repeat: false
+                    onTriggered: {
+                        mouseArea.clickCount = 0
+                        mouseArea.savedIndex = -1
+                    }
+                }
+
+                Timer {
+                    id: longPressTimer
+                    interval: 500
+                    repeat: false
+                    onTriggered: {
+                        if (!mouseArea.didDrag && !mouseArea.longPressTriggered && !mouseArea.doubleClickTriggered) {
+                            mouseArea.longPressTriggered = true
+                            doubleClickTimer.stop()
+                            mouseArea.clickCount = 0
+                            mouseArea.savedIndex = -1
+
+                            soundEffects.playSelect()
+
+                            if (collectionPathView.currentIndex !== index) {
+                                collectionPathView.currentIndex = index
+                            }
+
+                            collectionPathView.collectionActivated()
+
+                            longPressIndicator.visible = false
+                            progressBar.width = 0
+                        }
+                    }
+                }
+
+                NumberAnimation {
+                    id: progressAnimation
+                    target: progressBar
+                    property: "width"
+                    to: longPressIndicator.width
+                    duration: longPressTimer.interval
+                    running: false
+                }
+
+                onPressed: {
+                    pressX = mouse.x
+                    pressY = mouse.y
+                    didDrag = false
+                    longPressTriggered = false
+                    doubleClickTriggered = false
+                    longPressTimer.start()
+                    longPressIndicator.visible = true
+                    progressBar.width = 0
+                    progressAnimation.start()
+                }
+
+                onPositionChanged: {
+                    var dx = Math.abs(mouse.x - pressX)
+                    var dy = Math.abs(mouse.y - pressY)
+                    if (dx > 10 || dy > 10) {
+                        didDrag = true
+                        longPressTimer.stop()
+                        longPressIndicator.visible = false
+                        progressBar.width = 0
+                        progressAnimation.stop()
+                        doubleClickTimer.stop()
+                        clickCount = 0
+                        savedIndex = -1
+                    }
+                }
+
+                onReleased: {
+                    longPressTimer.stop()
+                    longPressIndicator.visible = false
+                    progressBar.width = 0
+                    progressAnimation.stop()
+                }
+
+                onClicked: {
+                    if (longPressTriggered) {
+                        return
+                    }
+
+                    if (didDrag) {
+                        clickCount = 0
+                        savedIndex = -1
+                        doubleClickTimer.stop()
+                        return
+                    }
+
+                    if (clickCount === 0) {
+                        savedIndex = index
+                        clickCount = 1
+
+                        if (collectionPathView.currentIndex !== index) {
+                            collectionPathView.currentIndex = index
+                        }
+                        collectionPathView.forceActiveFocus()
+                        doubleClickTimer.start()
+
+                    } else if (clickCount === 1 && savedIndex === index) {
+                        doubleClickTimer.stop()
+                        clickCount = 0
+                        savedIndex = -1
+                        doubleClickTriggered = true
+                        soundEffects.playSelect()
+                        if (collectionPathView.currentIndex !== index) {
+                            collectionPathView.currentIndex = index
+                        }
+
+                        collectionPathView.collectionActivated()
+
+                    } else {
+                        doubleClickTimer.stop()
+                        savedIndex = index
+                        clickCount = 1
+
+                        if (collectionPathView.currentIndex !== index) {
+                            collectionPathView.currentIndex = index
+                        }
+                        collectionPathView.forceActiveFocus()
+
+                        doubleClickTimer.start()
+                    }
+                }
+
+                onCanceled: {
+                    longPressTimer.stop()
+                    doubleClickTimer.stop()
+                    longPressIndicator.visible = false
+                    progressBar.width = 0
+                    progressAnimation.stop()
+                    clickCount = 0
+                    savedIndex = -1
+                }
+            }
         }
 
         Behavior on scale {
@@ -143,12 +324,11 @@ PathView {
     }
 
     onCurrentIndexChanged: {
+        console.log("CurrentIndex changed to:", currentIndex)
         if (model && model.count > 0 && currentIndex >= 0) {
             const selectedCollection = model.get(currentIndex)
             if (selectedCollection) {
-                if (_initialized) {
-                    soundEffects.playNavigation()
-                }
+                soundEffects.playNavigation()
                 collectionChanged(selectedCollection.shortName, selectedCollection.name)
             }
         }

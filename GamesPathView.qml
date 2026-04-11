@@ -18,6 +18,7 @@ PathView {
     signal gameChanged(var gameData)
     signal gameSelected(var gameData)
     signal favoriteToggled()
+    signal returnToCollections()
 
     property bool _initialized: false
     property var letterIndex: ({})
@@ -41,7 +42,6 @@ PathView {
     }
 
     onActiveFocusChanged: {
-
         if (visible && !activeFocus && !focusCorrectionInProgress) {
             Qt.callLater(function() {
                 if (visible && !activeFocus) {
@@ -173,6 +173,123 @@ PathView {
             }
         }
 
+        Rectangle {
+            id: longPressIndicator
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 5
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: parent.width * 0.8
+            height: 6
+            color: "#FF6B6B"
+            radius: 1.5
+            visible: false
+            opacity: 0.8
+
+            Rectangle {
+                id: progressBar
+                anchors.left: parent.left
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
+                width: 0
+                color: "#FF6B6B"
+                radius: 1.5
+            }
+        }
+
+        MouseArea {
+            id: gameMouseArea
+            anchors.fill: parent
+            z: 10
+
+            property real pressX: 0
+            property real pressY: 0
+            property bool didDrag: false
+            property bool longPressTriggered: false
+
+            Timer {
+                id: longPressTimer
+                interval: 800
+                repeat: false
+                onTriggered: {
+                    if (!gameMouseArea.didDrag && !gameMouseArea.longPressTriggered) {
+                        gameMouseArea.longPressTriggered = true
+                        soundEffects.playBack()
+                        gamesPathView.returnToCollections()
+                        longPressIndicator.visible = false
+                        progressBar.width = 0
+                    }
+                }
+            }
+
+            NumberAnimation {
+                id: progressAnimation
+                target: progressBar
+                property: "width"
+                to: longPressIndicator.width
+                duration: longPressTimer.interval
+                running: false
+            }
+
+            onPressed: {
+                pressX = mouse.x
+                pressY = mouse.y
+                didDrag = false
+                longPressTriggered = false
+                longPressTimer.start()
+                longPressIndicator.visible = true
+                progressBar.width = 0
+                progressAnimation.start()
+            }
+
+            onPositionChanged: {
+                var dx = Math.abs(mouse.x - pressX)
+                var dy = Math.abs(mouse.y - pressY)
+                if (dx > 10 || dy > 10) {
+                    didDrag = true
+                    longPressTimer.stop()
+                    longPressIndicator.visible = false
+                    progressBar.width = 0
+                    progressAnimation.stop()
+                }
+            }
+
+            onReleased: {
+                longPressTimer.stop()
+                longPressIndicator.visible = false
+                progressBar.width = 0
+                progressAnimation.stop()
+            }
+
+            onCanceled: {
+                longPressTimer.stop()
+                longPressIndicator.visible = false
+                progressBar.width = 0
+                progressAnimation.stop()
+            }
+
+            onClicked: {
+                if (didDrag) return
+                    gamesPathView.currentIndex = index
+                    gamesPathView.forceActiveFocus()
+            }
+
+            onDoubleClicked: {
+                if (didDrag) return
+                    gamesPathView.currentIndex = index
+                    gamesPathView.forceActiveFocus()
+                    var selectedGame = gamesPathView.model.get(index)
+                    if (selectedGame) {
+                        soundEffects.playSelect()
+                        var original = gamesPathView.findOriginalGame(selectedGame)
+                        if (original && typeof original.launch === "function") {
+                            var colIdx = collectionPathViewRef.currentIndex
+                            gamesPathView.saveGameState(colIdx, index)
+                            original.launch()
+                        }
+                    }
+            }
+        }
+
         Behavior on scale {
             NumberAnimation { duration: 300; easing.type: Easing.OutCubic }
         }
@@ -186,9 +303,7 @@ PathView {
         if (model && model.count > 0 && currentIndex >= 0) {
             const selectedGame = model.get(currentIndex)
             if (selectedGame) {
-                if (_initialized) {
-                    soundEffects.playNavigation()
-                }
+                soundEffects.playNavigation()
                 updateCurrentLetter(selectedGame)
                 gameChanged(selectedGame)
             }
@@ -371,6 +486,13 @@ PathView {
         }
 
         if (expandedView) {
+            event.accepted = true
+            return
+        }
+
+        if (api.keys.isCancel(event)) {
+            soundEffects.playBack()
+            returnToCollections()
             event.accepted = true
             return
         }

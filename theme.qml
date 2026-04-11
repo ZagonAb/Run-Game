@@ -138,6 +138,10 @@ FocusScope {
                     interfaceReady = true
                 }
             }
+
+            onCollectionActivated: {
+                showGamesPathView()
+            }
         }
 
         GamesPathView {
@@ -212,6 +216,10 @@ FocusScope {
                 collectionInfo.opacity = isExpanded ? 0 : 1
                 bottomTextContainer.opacity = isExpanded ? 0 : 1
                 pathViewIndicator.opacity = isExpanded ? 0 : 1
+            }
+
+            onReturnToCollections: {
+                hideGamesPathView()
             }
         }
 
@@ -337,6 +345,16 @@ FocusScope {
                         samples: 20
                         color: "#CC000000"
                     }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        z: 10
+                        onClicked: {
+                            if (!gamesExpandedView) {
+                                gamesPathView.toggleExpandedView()
+                            }
+                        }
+                    }
                 }
 
                 Image {
@@ -364,6 +382,16 @@ FocusScope {
                         radius: 12
                         samples: 20
                         color: "#CC000000"
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        z: 10
+                        onClicked: {
+                            if (!gamesExpandedView) {
+                                gamesPathView.toggleExpandedView()
+                            }
+                        }
                     }
                 }
             }
@@ -716,6 +744,36 @@ FocusScope {
                     event.accepted = true
                 } else {
                     event.accepted = true
+                }
+            }
+
+            MouseArea {
+                anchors.fill: parent
+                z: -1
+                onClicked: {
+                    if (gamesExpandedView) {
+                        gamesPathView.toggleExpandedView()
+                    }
+                }
+            }
+
+            MouseArea {
+                anchors.fill: expandedBoxArt
+                z: 10
+                onClicked: {
+                    if (gamesExpandedView) {
+                        gamesPathView.toggleExpandedView()
+                    }
+                }
+            }
+
+            MouseArea {
+                anchors.fill: expandedTitleScreen
+                z: 10
+                onClicked: {
+                    if (gamesExpandedView) {
+                        gamesPathView.toggleExpandedView()
+                    }
                 }
             }
         }
