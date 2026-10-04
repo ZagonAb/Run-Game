@@ -2,6 +2,14 @@
 
 - Run&Game a theme for Pegasus Frontend.
 
+## Aspect Ratio Support
+
+The theme works on both **16:9** and **4:3**.
+
+- **16:9** – Full widescreen layout for monitors and TVs.
+- **4:3 inside 16:9** – On a 16:9 display, the theme can render a 4:3 layout framed by a CRT-style overlay, for a retro look.
+- **Native 4:3 screens** – On real 4:3 displays, the theme detects the aspect ratio automatically and stays in 4:3 by default. No overlay is applied.
+
 ![screen](https://github.com/ZagonAb/Run-Game/blob/6ea83d8752120aaf3b891f368f335974238e1cce/.meta/screenshots/aspect-ratio-16x9-4x3.png)
 
 
