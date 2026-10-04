@@ -1,10 +1,17 @@
+// Run&Game Theme
+// Copyright (C) 2026 Gonzalo Abbate
+//
+// Licensed under Creative Commons
+// Attribution-NonCommercial-ShareAlike 4.0 International.
+//
+// https://creativecommons.org/licenses/by-nc-sa/4.0/
 import QtQuick 2.15
 import QtGraphicalEffects 1.15
 import "utils.js" as Utils
 
 PathView {
     id: gamesPathView
-    width: parent.width * 0.20
+    width: parent.height * (0.2 * 16.0 / 9.0)
     height: parent.height
 
     anchors {
@@ -32,6 +39,10 @@ PathView {
     preferredHighlightEnd: 0.5
 
     onVisibleChanged: {
+        if (!visible) {
+            scrollSettleTimer.stop()
+            fastScrolling = false
+        }
         if (visible) {
             Qt.callLater(function() {
                 if (!activeFocus) {
@@ -105,13 +116,22 @@ PathView {
             id: gameBackground
             anchors.fill: parent
 
+            property bool logoAllowed: false
+            Component.onCompleted: logoAllowed = !gamesPathView.fastScrolling
+            Connections {
+                target: gamesPathView
+                function onFastScrollingChanged() {
+                    if (!gamesPathView.fastScrolling) gameBackground.logoAllowed = true
+                }
+            }
+
             Image {
                 id: gameLogo
                 anchors.fill: parent
                 anchors.margins: parent.height * 0.01
                 asynchronous: true
                 fillMode: Image.PreserveAspectFit
-                source: modelData ? (modelData.assets.logo || "") : ""
+                source: (gameBackground.logoAllowed && modelData) ? (modelData.assets.logo || "") : ""
                 mipmap: true
                 sourceSize { width: 256; height: 256 }
                 cache: true
@@ -299,11 +319,52 @@ PathView {
         }
     }
 
+    property bool silentIndexChange: false
+    property bool fastScrolling: false
+    property int fastThresholdMs: 140
+    property int settleDelayMs: 180
+    property double _lastIndexChangeAt: 0
+
+    signal gameScrolling(var gameData)
+
+    highlightMoveDuration: fastScrolling ? 80 : 300
+
+    Timer {
+        id: scrollSettleTimer
+        interval: gamesPathView.settleDelayMs
+        repeat: false
+        onTriggered: gamesPathView.finishFastScroll()
+    }
+
+    function finishFastScroll() {
+        var wasFast = fastScrolling
+        fastScrolling = false
+        if (wasFast && model && model.count > 0 && currentIndex >= 0) {
+            var g = model.get(currentIndex)
+            if (g) {
+                updateCurrentLetter(g)
+                gameChanged(g)
+            }
+        }
+    }
+
     onCurrentIndexChanged: {
         if (model && model.count > 0 && currentIndex >= 0) {
             const selectedGame = model.get(currentIndex)
             if (selectedGame) {
-                soundEffects.playNavigation()
+                if (!silentIndexChange) soundEffects.playNavigation()
+
+                var now = Date.now()
+                var rapid = (now - _lastIndexChangeAt) < fastThresholdMs
+                _lastIndexChangeAt = now
+
+                if (rapid || fastScrolling) {
+                    fastScrolling = true
+                    scrollSettleTimer.restart()
+                    gameScrolling(selectedGame)
+                    return
+                }
+
                 updateCurrentLetter(selectedGame)
                 gameChanged(selectedGame)
             }
@@ -408,9 +469,9 @@ PathView {
                 var targetIndex = letterIndex[nextLetter][0]
 
                 currentLetter = nextLetter
+                silentIndexChange = true
                 currentIndex = targetIndex
-
-                soundEffects.playNavigation()
+                silentIndexChange = false
             }
     }
 
@@ -428,9 +489,9 @@ PathView {
                 var targetIndex = letterIndex[prevLetter][0]
 
                 currentLetter = prevLetter
+                silentIndexChange = true
                 currentIndex = targetIndex
-
-                soundEffects.playNavigation()
+                silentIndexChange = false
             }
     }
 
@@ -506,11 +567,9 @@ PathView {
             jumpToPrevLetter()
             event.accepted = true
         } else if (api.keys.isDown(event)) {
-            soundEffects.playNavigation()
             incrementCurrentIndex()
             event.accepted = true
         } else if (api.keys.isUp(event)) {
-            soundEffects.playNavigation()
             decrementCurrentIndex()
             event.accepted = true
         } else if (!event.isAutoRepeat && api.keys.isAccept(event)) {

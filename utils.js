@@ -1,4 +1,27 @@
+// Run&Game Theme
+// Copyright (C) 2026 Gonzalo Abbate
+//
+// Licensed under Creative Commons
+// Attribution-NonCommercial-ShareAlike 4.0 International.
+//
+// https://creativecommons.org/licenses/by-nc-sa/4.0/
+.pragma library
+
+var _titleCache = {}
+var _titleCacheSize = 0
+
 function cleanGameTitle(title) {
+    if (!title || typeof title !== 'string') return title || ''
+    var hit = _titleCache[title]
+    if (hit !== undefined) return hit
+    var result = _cleanGameTitleRaw(title)
+    if (_titleCacheSize > 8000) { _titleCache = {}; _titleCacheSize = 0 }
+    _titleCache[title] = result
+    _titleCacheSize++
+    return result
+}
+
+function _cleanGameTitleRaw(title) {
     if (!title || typeof title !== 'string') {
         return title || '';
     }

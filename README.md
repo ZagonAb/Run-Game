@@ -4,35 +4,30 @@
 
 ![screen](https://github.com/ZagonAb/Run-Game/blob/b005e147dca26ea58348b338550f3eb624835fe8/.meta/screenshots/screen0.png)
 
-![screen1](https://github.com/ZagonAb/Run-Game/blob/b005e147dca26ea58348b338550f3eb624835fe8/.meta/screenshots/screen1.png)
-
 
 ## Sound Credits
 
-This theme uses the following sound effects from Freesound.org:
+Sound effects sourced from [Freesound.org](https://freesound.org/):
 
-- **Menu Navigation**: "Videogame Menu Button Clicking Sound 18" by Christopherderp  
-  https://freesound.org/s/333047/  
-  License: Creative Commons 0
-
-- **Select Sound**: "sf3-sfx-menu-select.wav" by broumbroum  
-  https://freesound.org/s/50561/  
-  License: Attribution 3.0
-
-- **Back Sound**: "Cartoon UI Back/Cancel" by plasterbrain  
-  https://freesound.org/s/423168/  
-  License: Creative Commons 0
-
-- **Favorite Sound**: "Metallic Game Menu Ping Variation 1" by el_boss  
-  https://freesound.org/s/571580/  
-  License: Creative Commons 0
-
+| Effect | Sound | Author | License |
+|---|---|---|---|
+| **Menu Navigation** | [Videogame Menu Button Clicking Sound 18](https://freesound.org/s/333047/) | Christopherderp | CC0 |
+| **Select** | [sf3-sfx-menu-select.wav](https://freesound.org/s/50561/) | broumbroum | CC BY 3.0 |
+| **Back** | [Cartoon UI Back/Cancel](https://freesound.org/s/423168/) | plasterbrain | CC0 |
+| **Favorite** | [Metallic Game Menu Ping Variation 1](https://freesound.org/s/571580/) | el_boss | CC0 |
+| **Start** | [TV.wav](https://freesound.org/s/33243/) | ljudman | Sampling+ |
+  
 
 ## Collection Art Credits
 
 **Collection Images**: 
 - Sourced from [Alekfull-ARTFLIX](https://github.com/fagnerpc/Alekfull-ARTFLIX) by FagnerPC
-- License: **Creative Commons Attribution-NonCommercial-ShareAlike 2.0** (CC-BY-NC-SA 2.0)
+- License: **CC BY-NC-SA 2.0**
+
+## Overlays
+**Overlays Images**
+- Sourced from[Duimon - Retroarch-Overlays](https://github.com/Duimon/Retroarch-Overlays)
+- License: **CC BY-NC-ND 4.0**
 
 ## 📜 License
 

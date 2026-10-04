@@ -1,3 +1,10 @@
+// Run&Game Theme
+// Copyright (C) 2026 Gonzalo Abbate
+//
+// Licensed under Creative Commons
+// Attribution-NonCommercial-ShareAlike 4.0 International.
+//
+// https://creativecommons.org/licenses/by-nc-sa/4.0/
 import QtQuick 2.15
 
 QtObject {
@@ -82,6 +89,12 @@ QtObject {
             description: "Lutris is a free and open source game manager for Linux-based operating systems developed and maintained by Mathieu Comandon and the community, released"
         },
         {
+            shortName: "enterprise128",
+            systemName: "Enterprise 128",
+            releaseYear: 1985,
+            description: "The Enterprise 128 is an 8-bit home computer developed by Enterprise Computers and released in 1985. It features a Zilog Z80A processor, 128 KiB of RAM, advanced graphics and sound capabilities, and the EXOS operating system."
+        },
+        {
             shortName: "ps3",
             systemName: "PlayStation 3",
             releaseYear: 2006,
@@ -131,6 +144,12 @@ QtObject {
         },
         {
             shortName: "neogeo",
+            systemName: "Neo Geo",
+            releaseYear: 1990,
+            description: "The Advanced Entertainment System (AES), originally known just as the Neo Geo, is the first video game console in the family. The hardware features comparatively colorful 2D graphics."
+        },
+        {
+            shortName: "snkneogeo",
             systemName: "Neo Geo",
             releaseYear: 1990,
             description: "The Advanced Entertainment System (AES), originally known just as the Neo Geo, is the first video game console in the family. The hardware features comparatively colorful 2D graphics."
@@ -280,12 +299,6 @@ QtObject {
             description: "The CDTV (an acronym for 'Commodore Dynamic Total Vision', a backronym of an acronym for 'Compact Disc Television', giving it a double meaning) is a multimedia platform developed by Commodore International and launched in March 1991. The CDTV was intended as a media appliance rather than a personal computer."
         },
         {
-            shortName: "amstradcpc",
-            systemName: "Amstrad CPC",
-            releaseYear: 1984,
-            description: "The Amstrad Colour Personal Computer, better known as the Amstrad CPC, is a series of 8-bit home computers designed by Amstrad. The first models were released in April 1984 in Europe at a retail price ranging from £199 to £299, depending on the package bought."
-        },
-        {
             shortName: "xbox",
             systemName: "Xbox",
             releaseYear: 2001,
@@ -386,12 +399,6 @@ QtObject {
             systemName: "Xbox",
             releaseYear: 2001,
             description: "Xbox is a video gaming brand created and owned by Microsoft. It represents a series of video game consoles developed by Microsoft, with three consoles released in the sixth, seventh, and eighth generations, respectively. The brand was first introduced in the United States in November 2001, with the launch of the original Xbox console."
-        },
-        {
-            shortName: "laserdisc",
-            systemName: "LaserDisc Games",
-            releaseYear: "Various",
-            description: "LaserDisc arcade games use pre-recorded video, either in combination with overlaid sprites or simply as sections of video controllable by the player. The first major LaserDisc game was Sega's Astron Belt, released in 1983."
         },
         {
             shortName: "pcarcade",
@@ -766,6 +773,12 @@ QtObject {
             description: "The CD-ROM² (pronounced CD-ROM-ROM) is an add-on attachment for the PC Engine that was released in Japan on December 4, 1988. The add-on allows the core versions of the console to play PC Engine games in CD-ROM format in addition to standard HuCards."
         },
         {
+            shortName: "markiii",
+            systemName: "SEGA Mark III",
+            releaseYear: 1985,
+            description: "The SEGA Mark III is an 8-bit home video game console developed by Sega and released in Japan in 1985. It was the successor to the SG-1000 II and served as the basis for the Sega Master System released internationally."
+        },
+        {
             shortName: "cps3",
             systemName: "CPS-III",
             releaseYear: 1996,
@@ -1102,6 +1115,12 @@ QtObject {
             description: "The Sega Saturn is a home video game console developed by Sega and released on November 22, 1994 in Japan, May 11, 1995 in North America, and July 8, 1995 in Europe. Part of the fifth generation of video game consoles, it was the successor to the successful Sega Genesis."
         },
         {
+            shortName: "amiga500",
+            systemName: "Amiga 500",
+            releaseYear: 1987,
+            description: "The Commodore Amiga 500 is a 16-bit home computer developed by Commodore International and released in 1987. It belongs to the Amiga family of personal computers and features advanced graphics and sound capabilities for its time."
+        },
+        {
             shortName: "consolearcade",
             systemName: "Console Arcade Games",
             releaseYear: "Various",
@@ -1282,6 +1301,12 @@ QtObject {
             description: "View your recently played games across the entire library."
         },
         {
+            shortName: "pico",
+            systemName: "SEGA Pico",
+            releaseYear: 1993,
+            description: "The SEGA Pico is an educational video game console developed by Sega and released in 1993. Designed for children, it features a touch pen, interactive Storyware cartridges, and a Motorola 68000 processor derived from the Mega Drive."
+        },
+        {
             shortName: "x1",
             systemName: "X1",
             releaseYear: 1982,
@@ -1456,6 +1481,12 @@ QtObject {
             description: "MS-DOS, short for Microsoft Disk Operating System, was an operating system for x86-based personal computers mostly developed by Microsoft. It was the most commonly used member of the DOS family of operating systems, and was the main operating system for IBM PC compatible personal computers during the 1980s to the mid-1990s, when it was gradually superseded by operating systems offering a graphical user interface (GUI), in various generations of the Microsoft Windows operating system."
         },
         {
+            shortName: "bk0010",
+            systemName: "Elektronika BK-0010",
+            releaseYear: 1985,
+            description: "The Elektronika BK-0010 is a 16-bit Soviet home computer developed by the NPO Scientific Center and based on the PDP-11 architecture. Released in 1985, it featured a K1801VM1 CPU running at 3 MHz, 32 KiB of RAM, and supported monochrome and four-color graphics."
+        },
+        {
             shortName: "channelf",
             systemName: "Fairchild Channel F",
             releaseYear: 1976,
@@ -1484,6 +1515,12 @@ QtObject {
             systemName: "BBC Micro",
             releaseYear: 1981,
             description: "The British Broadcasting Corporation Microcomputer System, BBC Microcomputer System, or best known as the BBC Micro is a series of microcomputers designed by Acorn Computers Ltd. and distributed by the BBC."
+        },
+        {
+            shortName: "bbcmaster",
+            systemName: "BBC Master",
+            releaseYear: 1986,
+            description: "The BBC Master is a series of 8-bit microcomputers developed by Acorn Computers and introduced by the British Broadcasting Corporation in 1986 as the successor to the BBC Microcomputer System."
         },
         {
             shortName: "prboom",
@@ -1576,6 +1613,12 @@ QtObject {
             description: "View and play the Hunting and Fishing games across your entire library."
         },
         {
+            shortName: "vii",
+            systemName: "KenSingTon Vii",
+            releaseYear: 2007,
+            description: "The KenSingTon Vii is a Chinese video game console released in 2007 by KenSingTon and JungleTac. Inspired by the Nintendo Wii, it features motion-sensing controllers, built-in games, and cartridge support."
+        },
+        {
             shortName: "atarijaguarcd",
             systemName: "Atari Jaguar CD",
         },
@@ -1652,6 +1695,12 @@ QtObject {
             description: "View and play the Casino games across your entire library."
         },
         {
+            shortName: "creativision",
+            systemName: "VTech CreatiVision",
+            releaseYear: 1982,
+            description: "The VTech CreatiVision is an 8-bit hybrid home computer and video game console developed by VTech and released in 1982. It features a Rockwell 6502 processor, 16-color graphics, built-in joystick and keypad controllers, and support for cartridges and computer-oriented expansions."
+        },
+        {
             shortName: "mame-advmame",
             systemName: "AdvanceMAME",
             releaseYear: 1998,
@@ -1674,6 +1723,12 @@ QtObject {
             systemName: "Never Played",
             releaseYear: "Various",
             description: "View and play your never played games across your entire library."
+        },
+        {
+            shortName: "videotontvc",
+            systemName: "Videoton TVC",
+            releaseYear: 1985,
+            description: "The Videoton TVC is an 8-bit home computer developed and manufactured by Videoton in Hungary. Based on a Zilog Z80 processor running at 3.125 MHz, it was produced in 32K, 64K, and 64K+ variants and was primarily used in Hungarian schools and homes."
         },
         {
             shortName: "pet",
@@ -1754,6 +1809,12 @@ QtObject {
             description: "The TurboGrafx-16, known as the PC Engine in Japan and France, is a 16-bit fourth-generation home video game console designed by Hudson Soft and sold by NEC Home Electronics. It was released in Japan in 1987 and in North America in 1989."
         },
         {
+            shortName: "turbografxcd",
+            systemName: "NEC TurboGrafx-CD",
+            releaseYear: 1989,
+            description: "The TurboGrafx-CD is a CD-ROM add-on for the TurboGrafx-16 developed by NEC. Released in North America in 1989, it allowed the console to play CD-based games and audio CDs, and was the North American counterpart to the PC Engine CD-ROM² system."
+        },
+        {
             shortName: "turbografx16",
             systemName: "TurboGrafx-16",
             releaseYear: 1989,
@@ -1784,6 +1845,12 @@ QtObject {
             description: "The ZX Spectrum is an 8-bit personal home computer released in the United Kingdom in 1982 by Sinclair Research Ltd. It was the follow-up to the Sinclair ZX81."
         },
         {
+            shortName: "zxspectrumplus2",
+            systemName: "Sinclair ZX Spectrum +2",
+            releaseYear: 1986,
+            description: "The Sinclair ZX Spectrum +2 is a 128K home computer developed by Amstrad and released in 1986 after its acquisition of Sinclair's computer business. It features a Zilog Z80A processor, 128 KiB of RAM, AY-3-8912 sound, and an integrated cassette recorder."
+        },
+        {
             shortName: "auto-casual",
             systemName: "Casual",
             releaseYear: "Various",
@@ -1794,6 +1861,12 @@ QtObject {
             systemName: "ScummVM",
             releaseYear: 2001,
             description: "Script Creation Utility for Maniac Mansion Virtual Machine (ScummVM) is a set of game engine recreations. Originally designed to play LucasArts adventure games that use the SCUMM system, it also supports a variety of non-SCUMM games by companies like Revolution Software and Adventure Soft."
+        },
+        {
+            shortName: "zxspectrumplus3",
+            systemName: "Sinclair ZX Spectrum +3",
+            releaseYear: 1987,
+            description: "The Sinclair ZX Spectrum +3 is a 128K home computer developed by Amstrad and released in 1987. It features a Zilog Z80A processor, 128 KiB of RAM, an integrated 3-inch floppy disk drive, enhanced sound, and the +3DOS disk operating system."
         },
         {
             shortName: "auto-various",

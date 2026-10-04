@@ -1,9 +1,16 @@
+// Run&Game Theme
+// Copyright (C) 2026 Gonzalo Abbate
+//
+// Licensed under Creative Commons
+// Attribution-NonCommercial-ShareAlike 4.0 International.
+//
+// https://creativecommons.org/licenses/by-nc-sa/4.0/
 import QtQuick 2.15
 import QtGraphicalEffects 1.15
 
 PathView {
     id: collectionPathView
-    width: parent.width * 0.20
+    width: parent.height * (0.2 * 16.0 / 9.0)
     height: parent.height
     anchors {
         right: parent.right
@@ -97,7 +104,7 @@ PathView {
                 asynchronous: true
                 fillMode: Image.PreserveAspectFit
                 source: itemShortName !== "" ? "assets/images/collections/" + itemShortName + ".png" : ""
-                mipmap: true
+                mipmap: false
                 sourceSize.width: parent.width
                 sourceSize.height: parent.height
 
@@ -349,11 +356,9 @@ PathView {
 
     Keys.onPressed: {
         if (api.keys.isNextPage(event) || api.keys.isDown(event)) {
-            soundEffects.playNavigation()
             incrementCurrentIndex()
             event.accepted = true
         } else if (api.keys.isPrevPage(event) || api.keys.isUp(event)) {
-            soundEffects.playNavigation()
             decrementCurrentIndex()
             event.accepted = true
         }

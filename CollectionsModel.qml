@@ -1,3 +1,10 @@
+// Run&Game Theme
+// Copyright (C) 2026 Gonzalo Abbate
+//
+// Licensed under Creative Commons
+// Attribution-NonCommercial-ShareAlike 4.0 International.
+//
+// https://creativecommons.org/licenses/by-nc-sa/4.0/
 import QtQuick 2.15
 import SortFilterProxyModel 0.2
 
