@@ -26,7 +26,7 @@ Sound effects sourced from [Freesound.org](https://freesound.org/):
 
 ## Overlays
 **Overlays Images**
-- Sourced from[Duimon - Retroarch-Overlays](https://github.com/Duimon/Retroarch-Overlays)
+- Sourced from [Retroarch-Overlays](https://github.com/Duimon/Retroarch-Overlays) by Duimon
 - License: **CC BY-NC-ND 4.0**
 
 ## 📜 License
