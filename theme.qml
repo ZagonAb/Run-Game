@@ -49,6 +49,20 @@ FocusScope {
         : (overlayAllowed && overlayChoice > 0 && !overlayProbeDone)
     readonly property bool splashBusy: booting || overlayLoading || overlayPending
 
+    property bool settingsReady: false
+    property bool splashStarted: false
+    readonly property bool splashGateReady: settingsReady
+        && (!overlayActive || overlayImage.status === Image.Ready)
+    onSplashGateReadyChanged: if (splashGateReady) splashStarted = true
+
+    Timer {
+        id: splashGateTimeout
+        interval: 2500
+        running: true
+        repeat: false
+        onTriggered: root.splashStarted = true
+    }
+
     property SettingsManager settingsManager: SettingsManager {}
 
     readonly property bool nativeAspect43: height > 0 && (width / height) < 1.45
@@ -970,7 +984,7 @@ FocusScope {
         sourceSize.width: Math.round(root.stageW)
         sourceSize.height: Math.round(root.stageH)
         fillMode: Image.Stretch
-        asynchronous: true
+        asynchronous: !root.booting
         cache: true
         smooth: true
     }
@@ -1025,11 +1039,12 @@ FocusScope {
 
     SplashScreen {
         id: splash
+        z: root.overlayActive ? 40 : 200
         screenX: root.viewX
         screenY: root.viewY
         screenW: root.viewW
         screenH: root.viewH
-        busy: root.splashBusy
+        busy: root.splashStarted && root.splashBusy
         mode: "boot"
         label: api.memory.has('wasInGamesView') ? "RESUMING" : "LOADING"
         detail: root.booting
@@ -1207,6 +1222,7 @@ FocusScope {
 
     Component.onCompleted: {
         if (settingsManager) settingsManager.load()
+        settingsReady = true
         detectOverlays()
         if (collectionsModel.modelReady) {
             Qt.callLater(function() {
